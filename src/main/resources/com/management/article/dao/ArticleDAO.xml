@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.management.article.dao.ArticleDAO">
+    <resultMap id="articleResultMap" type="com.management.article.dataobject.ArticleDO">
+        <id column="id" property="id"></id>
+        <result column="seq_id" property="seqId"/>
+        <result column="author" property="author"/>
+        <result column="article_name" property="articleName"/>
+        <result column="article_type" property="articleType"/>
+        <result column="publish_house" property="publishHouse"/>
+        <result column="publish_year" property="publishYear"/>
+        <result column="num" property="num"/>
+        <result column="start_page" property="startPage"/>
+        <result column="end_page" property="endPage"/>
+        <result column="gmt_created" property="gmtCreated"/>
+        <result column="gmt_modified" property="gmtModified"/>
+    </resultMap>
+    <insert id="insert" parameterType="com.management.article.dataobject.ArticleDO" useGeneratedKeys="true"
+            keyProperty="id">
+    insert into article values(#{id},#{seqId},#{author},#{articleName},#{articleType},#{publishHouse},#{publishYear},#{num},#{startPage},#{endPage});
+    </insert>
+    <delete id="deleteById">
+    delete from article where id=#{id}
+</delete>
+<!--    给出的条件必须生效-->
+    <delete id="deleteByObject" parameterType="com.management.article.dataobject.ArticleDO">
+        delete from article
+        where
+        <choose>
+            <when test="id==null and articleName==null and publishHouse==null">
+                false
+            </when>
+            <otherwise>
+                true
+            </otherwise>
+        </choose>
+        <if test="id!=null">
+            and id=#{id}
+        </if>
+        <if test="articleName!=null">
+            and article_name=#{articleName}
+        </if>
+        <if test="publishHouse!=null">
+            and publish_house=#{publishHouse}
+        </if>
+    </delete>
+    <update id="update" parameterType="com.management.article.dataobject.ArticleDO">
+        update article set
+        <if test="seqId!=null">
+            seq_id=#{seqId} ,
+        </if>
+        <if test="author!=null">
+            author=#{author} ,
+        </if>
+        <if test="articleName!=null">
+            article_name=#{articleName} ,
+        </if>
+        <if test="articleType!=null">
+            article_type=#{articleType} ,
+        </if>
+        <if test="publishHouse!=null">
+            publish_house=#{publishHouse} ,
+        </if>
+        <if test="publishYear!=null">
+            publish_year=#{publishYear} ,
+        </if>
+        <if test="num!=null">
+            num=#{num} ,
+        </if>
+        <if test="startPage!=null">
+            startp_age=#{startPage} ,
+        </if>
+        <if test="endPage!=null">
+            publish_year=#{endPage} ,
+        </if>
+        gmt_modified=now()
+        where id=#{id}
+    </update>
+
+</mapper>
