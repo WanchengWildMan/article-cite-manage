@@ -1,5 +1,7 @@
 package com.management.article.utils;
 
+import java.text.SimpleDateFormat;
+
 public class ArticleUtil {
     public static final String MONOGRAPH = "M";
     public static final String ARTICLE_COLLECTION = "C";
@@ -8,4 +10,5 @@ public class ArticleUtil {
     public static final String DISSERTATION = "D";
     public static final String REPORT = "R";
     public static final String NULL = "null";
+    public static final SimpleDateFormat LOG_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 }

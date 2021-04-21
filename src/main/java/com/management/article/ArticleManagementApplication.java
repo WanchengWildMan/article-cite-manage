@@ -4,7 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
-//@MapperScan("com.management.article.dao")
+//@MapperScan("com.management.article.*")
 public class ArticleManagementApplication {
 
     public static void main(String[] args) {

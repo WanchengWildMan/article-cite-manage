@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="com.management.article.dao.ArticleDAO">
     <resultMap id="articleResultMap" type="com.management.article.dataobject.ArticleDO">
         <id column="id" property="id"></id>
@@ -16,14 +17,15 @@
         <result column="gmt_created" property="gmtCreated"/>
         <result column="gmt_modified" property="gmtModified"/>
     </resultMap>
-    <insert id="insert" parameterType="com.management.article.dataobject.ArticleDO" useGeneratedKeys="true"
+
+    <insert id="add" parameterType="com.management.article.dataobject.ArticleDO" useGeneratedKeys="true"
             keyProperty="id">
-    insert into article values(#{id},#{seqId},#{author},#{articleName},#{articleType},#{publishHouse},#{publishYear},#{num},#{startPage},#{endPage});
+    insert into article values(#{id},#{seqId},#{author},#{articleName},#{articleType},#{publishHouse},#{publishYear},#{num},#{startPage},#{endPage},now(),now());
     </insert>
     <delete id="deleteById">
     delete from article where id=#{id}
-</delete>
-<!--    给出的条件必须生效-->
+    </delete>
+    <!--    给出的条件必须生效-->
     <delete id="deleteByObject" parameterType="com.management.article.dataobject.ArticleDO">
         delete from article
         where
@@ -35,47 +37,68 @@
                 true
             </otherwise>
         </choose>
-        <if test="id!=null">
+        <if test="id!=0 and id!=null">
             and id=#{id}
         </if>
-        <if test="articleName!=null">
+        <if test="articleName!='' and id !=null">
             and article_name=#{articleName}
         </if>
-        <if test="publishHouse!=null">
+        <if test="publishHouse!='' and publishHouse!=null">
             and publish_house=#{publishHouse}
         </if>
     </delete>
     <update id="update" parameterType="com.management.article.dataobject.ArticleDO">
         update article set
-        <if test="seqId!=null">
-            seq_id=#{seqId} ,
+        <if test="seqId!=''">seq_id=#{seqId} ,
         </if>
-        <if test="author!=null">
-            author=#{author} ,
+        <if test="author!=''">author=#{author} ,
         </if>
-        <if test="articleName!=null">
-            article_name=#{articleName} ,
+        <if test="articleName!=''">article_name=#{articleName} ,
         </if>
-        <if test="articleType!=null">
-            article_type=#{articleType} ,
+        <if test="articleType!=''">article_type=#{articleType} ,
         </if>
-        <if test="publishHouse!=null">
-            publish_house=#{publishHouse} ,
+        <if test="publishHouse!=''">publish_house=#{publishHouse} ,
         </if>
-        <if test="publishYear!=null">
-            publish_year=#{publishYear} ,
+        <if test="publishYear!=0">publish_year=#{publishYear},
         </if>
-        <if test="num!=null">
-            num=#{num} ,
+        <if test="num!=''">num=#{num} ,
         </if>
-        <if test="startPage!=null">
-            startp_age=#{startPage} ,
+        <if test="startPage!=0">start_page=#{startPage} ,
         </if>
-        <if test="endPage!=null">
-            publish_year=#{endPage} ,
+        <if test="endPage!=0">end_page=#{endPage} ,
         </if>
         gmt_modified=now()
         where id=#{id}
     </update>
+    <select id="findById">
+        select * from article
+        <if test="id!=0">
+            where id=#{id}
+        </if>
+    </select>
+<!--    返回字段要与模型类中字段一致-->
+    <select id="findByObject" resultType="com.management.article.dataobject.ArticleDO"
+            parameterType="com.management.article.dataobject.ArticleDO">
+        select id as id,seq_id seqId,author as author,article_name as articleName,article_type as
+        articleType,publish_house as publishHouse,publish_year as publishYear,num as num,start_page as
+        startPage,end_page as endPage,gmt_created as gmtCreated,gmt_modified as gmtModified from article
+        where true
+        <if test="id!=0">
+            and id=#{id}
+        </if>
+        <if test="seqId!=0">
+            and seq_id=#{seqId}
+        </if>
+        <if test="author!=''">
+            and author=#{author}
+        </if>
+        <if test="articleName!=''">
+            and article_name like #{articleName}
+        </if>
+        <!--        <if test="publishHouse!=''">-->
+        <!--            and publish_house like %#{publishHouse}%-->
+        <!--        </if>-->
+        ;
+    </select>
 
 </mapper>

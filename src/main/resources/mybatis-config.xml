@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <properties resource="application.properties"/>
+    <settings>
+        <setting name="logImpl" value="LOG4J"/>
+    </settings>
+    <typeAliases>
+<!--        目录级数相差太大就找不到了-->
+        <typeAlias alias="articleDO" type="com.management.article.dataobject.ArticleDO"/>
+    </typeAliases>
+    <mappers>
+        <mapper resource="dao/ArticleDAO.xml"/>
+    </mappers>
+</configuration>

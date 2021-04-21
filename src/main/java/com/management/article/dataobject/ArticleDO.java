@@ -1,10 +1,12 @@
 package com.management.article.dataobject;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.type.Alias;
 
 import java.time.LocalDateTime;
 
 @Mapper
+@Alias("articleDO")
 public class ArticleDO {
     //基本信息：文献编号、文献作者、文献篇名、文献类型（M：专著、C：论文集、N：报纸文章、J：期刊文章、D：学位论文、R：报告）、出版机构、出版时间、卷号（期号），
     //[1] 夏鲁惠.高等学校毕业论文教学情况调研报告[J].高等理科教育，2004(1):46-52.
@@ -61,9 +63,7 @@ public class ArticleDO {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+
 
     public void setId(long id) {
         this.id = id;

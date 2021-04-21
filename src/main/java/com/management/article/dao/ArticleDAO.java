@@ -14,7 +14,7 @@ public interface ArticleDAO {
 
     int deleteByObject(ArticleDO articleDO);
 
-    int deleteById(@Param("id") String id);
+    int deleteById(@Param("id") long id);
 
     List<ArticleDO> findByObject(ArticleDO articleDO);
 
