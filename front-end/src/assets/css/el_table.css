@@ -1,0 +1,14 @@
+
+/deep/ .el-table,/deep/ .el-table--border {
+    border: 3px solid grey;
+}
+
+/deep/ .el-table--border td {
+    border-right: 2px solid #EBEEF5;
+}
+
+.el-table td {
+    border-bottom: 2px solid #EBEEF5;
+}
+
+

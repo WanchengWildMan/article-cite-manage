@@ -8322,6 +8322,11 @@ vuex@^3.4.0:
   resolved "https://registry.npm.taobao.org/vuex/download/vuex-3.6.2.tgz?cache=0&sync_timestamp=1612277384353&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fvuex%2Fdownload%2Fvuex-3.6.2.tgz#236bc086a870c3ae79946f107f16de59d5895e71"
   integrity sha1-I2vAhqhww655lG8QfxbeWdWJXnE=
 
+vxe-table@^3.2.19:
+  version "3.2.19"
+  resolved "https://registry.nlark.com/vxe-table/download/vxe-table-3.2.19.tgz?cache=0&sync_timestamp=1619167975908&other_urls=https%3A%2F%2Fregistry.nlark.com%2Fvxe-table%2Fdownload%2Fvxe-table-3.2.19.tgz#4b1db66b6c8515a872c4eab884d94c0fe440d09c"
+  integrity sha1-Sx22a2yFFahyxOq4hNlMD+RA0Jw=
+
 watchpack-chokidar2@^2.0.1:
   version "2.0.1"
   resolved "https://registry.npm.taobao.org/watchpack-chokidar2/download/watchpack-chokidar2-2.0.1.tgz#38500072ee6ece66f3769936950ea1771be1c957"

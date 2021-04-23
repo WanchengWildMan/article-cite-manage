@@ -1,16 +1,44 @@
 <template>
+
   <div>
+    <!-- 左按钮区 -->
+    <template slot="left-field">
+      <el-button type="danger" icon="el-icon-circle-plus-outline" @click="addTodo">添加</el-button>
+    </template>
+    <!-- 搜索框 -->
+    <template slot="search-field">
+      <el-input v-model="searchStr" suffix-icon="el-icon-search" placeholder="请输入搜索内容"></el-input>
+    </template>
+    <!-- 过滤条件区 -->
+    <template slot="filter-field">
+      <!-- 状态过滤框 -->
+      <el-select v-model="filterType" placeholder="选择类型">
+        <el-option label="全部" value=""></el-option>
+        <el-option v-for="status, index in statuses" :key="status" :label="status" :value="index"></el-option>
+      </el-select>
+      <!-- 时间过滤框 -->
+      <el-date-picker v-model="filterDates" type="daterange" start-placeholder="起始时间" end-placeholder="结束时间"></el-date-picker>
+    </template>
+    <!-- 右按钮区 -->
+    <template slot="right-field">
+      <el-button type="primary" icon="el-icon-refresh" @click="update">刷新</el-button>
+      <el-button type="warning" icon="el-icon-upload2" @click="uploadShow=true">导入</el-button>
+      <el-button type="success" icon="el-icon-download" @click="downloadTodos">导出</el-button>
+    </template>
     <!--    TODO-->
     <el-table :data="tableData"
               border
-              style="width: 70%; border-radius:13px;"
+              style="width: 100%; border-radius:20px; "
 
     >
-      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="id" label="引用编号"
-                       width="150">
+      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" label="序号">
+        <template slot-scope="scope">{{ scope.$index + 1 }}</template>
+      </el-table-column>
+      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="id" label="论文编号"
+      >
 
       </el-table-column>
-      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="seqId" label="引用次序" width="150">
+      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="seqId" label="引用次序">
         <template slot-scope="scope">
           <el-input-number
               v-model="scope.row.seqId"
@@ -22,7 +50,7 @@
           <span v-show="!scope.row.show">{{ scope.row.seqId }}</span>
         </template>
       </el-table-column>
-      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="articleName" label="论文题目" width="150">
+      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="articleName" label="论文题目">
         <template slot-scope="scope">
           <el-input
               v-model="scope.row.articleName"
@@ -36,10 +64,39 @@
       </el-table-column>
       <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="author" label="作者" width="120">
       </el-table-column>
-      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="articleType" label="论文类型" width="150">
+      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="articleType" label="论文类型">
       </el-table-column>
+      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="publishHouse" label="论文类型">
+      </el-table-column>
+      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="publishYear" label="论文类型">
+      </el-table-column>
+      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="num" label="卷号">
+      </el-table-column>
+      <el-table-column sortable :sort-orders="[`ascending`,`descending`]" label="起止页码" min-width="200px">
+        <template slot-scope="scope">
 
-      <el-table-column sortable="right" label="操作">
+          <el-input-number
+              v-model="scope.row.startPage"
+              v-show="scope.row.show"
+              size="mini"
+              :min="1"
+              type="number"
+              style="display: inline-block"
+          />
+          <span v-show="!scope.row.show">{{ scope.row.startPage }}</span>
+          -
+          <el-input-number
+              v-model="scope.row.endPage"
+              v-show="scope.row.show"
+              size="mini"
+              :min="1"
+              type="number"
+              style="display: inline-block"
+          />
+          <span v-show="!scope.row.show">{{ scope.row.endPage }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column sortable="right" label="操作" min-width="300px">
         <template slot-scope="scope">
           <el-button @click="saveData(scope.row)"
                      type="success"
@@ -49,7 +106,7 @@
           </el-button
           >
           <el-button
-              @click="handleEdit(row)"
+              @click="handleEdit(scope.row)"
               type="primary"
               size="mini"
               icon="el-icon-edit"
@@ -78,13 +135,20 @@
     </el-pagination>
   </div>
 </template>
+<style type="text/css" src="./assets/css/el_table.css" scoped></style>
+
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
+import "@/assets/css/el_table.css";
+//TODO 表单验证
 export default {
   methods: {
+    hasError(resp) {
+      return (!resp.data || resp.data.errors.length > 0);
+    },
     showAlert(_this, resp, row, opr) {
       // const _this=this;
-      if (!resp.data || resp.data.errors.length > 0) {
+      if (this.hasError(resp)) {
 
         _this.$alert(
             `论文  + ${row.articleName} +  ${opr}失败！原因：${resp.data.errors}`,
@@ -96,6 +160,7 @@ export default {
               },
             }
         );
+        return false;
       }
       _this.$alert(`论文 ${row.articleName} ${opr}成功！`, "消息", {
         confirmButtonText: "确定",
@@ -103,6 +168,7 @@ export default {
           // window.location.reload();
         },
       });
+      return true;
     },
     deleteArticle(row) {
       const _this = this;
@@ -135,15 +201,22 @@ export default {
     },
     saveData(row) {
       const _this = this;
+      this.$set(row, 'show', false);
       axios.post(`http://localhost:${this.port}/admin/updateOne`, row).then(function (resp) {
-            console.log("POST")
-            _this.showAlert(_this, resp, row, "修改");
+            let ok = !_this.hasError(resp);
+            _this.$message({
+              type: ok ? "success" : "error",
+              message: "保存" + (ok ? "成功" : "失败"),
+            });
           }
       )
     },
-    handleEdit(row){
-      for(let col of row)
+    handleEdit(row) {
+      // console.log(scope.row); scope.row.$set(scope.row,'show',true)
+      this.$set(row, "show", true);
     },
+
+
     page(currentPage) {
       const _this = this;
       axios.get(`http://localhost:${this.port}/admin/find`).then(function (resp) {
@@ -155,20 +228,21 @@ export default {
         console.log(_this.pageNum)
         _this.total = resp.data.content.length
       });
-    },
-    //单元格点击后，显示input，并让input 获取焦点
-    // handleCellClick: function (row, column, cell, event) {
-    //   emptransfer.addClass(cell, 'current-cell');
-    //   if (emptransfer.getChildElement(cell, 3) !== 0) {
-    //     var _inputParentNode = emptransfer.getChildElement(cell, 3);
-    //     if (_inputParentNode.hasChildNodes() && _inputParentNode.childNodes.length > 2) {
-    //       var _inputNode = _inputParentNode.childNodes[2];
-    //       if (_inputNode.tagName === 'INPUT') {
-    //         _inputNode.focus();
-    //       }
-    //     }
-    //   }
-    // },
+    }
+    ,
+//单元格点击后，显示input，并让input 获取焦点
+// handleCellClick: function (row, column, cell, event) {
+//   emptransfer.addClass(cell, 'current-cell');
+//   if (emptransfer.getChildElement(cell, 3) !== 0) {
+//     var _inputParentNode = emptransfer.getChildElement(cell, 3);
+//     if (_inputParentNode.hasChildNodes() && _inputParentNode.childNodes.length > 2) {
+//       var _inputNode = _inputParentNode.childNodes[2];
+//       if (_inputNode.tagName === 'INPUT') {
+//         _inputNode.focus();
+//       }
+//     }
+//   }
+// },
 //input框失去焦点事件
 //     handleInputBlur: function (event) {   //当 input 失去焦点 时,input 切换为 span，并且让下方 表格消失（注意，与点击表格事件的执行顺序）
 //       var _event = event;
@@ -265,19 +339,23 @@ export default {
         this.mousedown = false;
         document.body.style.cursor = "default";
       };
-    },
-    // 得到目标值事件
+    }
+    ,
+// 得到目标值事件
     getTarget(evt) {
       return evt.target || evt.srcElement;
-    },
-    // 添加监听
+    }
+    ,
+// 添加监听
     addListener(element, type, listener, useCapture) {
       //这是两种写法，对应不同浏览器
       element.addEventListener
           ? element.addEventListener(type, listener, useCapture)
           : element.attachEvent("on" + type, listener);
-    },
-  },
+    }
+    ,
+  }
+  ,
   watch: {
     tableData: {
       handler(newTable, oldTable) {
@@ -285,16 +363,19 @@ export default {
       }
     }
   }
-  // 防止全局组件污染，故data用函数
+  ,
+// 防止全局组件污染，故data用函数
   data() {
     return {
       port: 8080,
       pageEachSize: 10,
       pageNum: 1,//no use
       total: 10,
+      displayLogic: ["display:none;", "display:block;"],
       tableData: [
         {
           id: 1,
+          seqId: 2,
           articleName: "解忧杂货店",
           author: "东野圭吾",
         },
@@ -309,8 +390,19 @@ export default {
           author: "太宰治",
         },
       ],
+      formRules: {
+        articleName: [
+          {required: true, message: '请输入论文题目', trigger: 'blur'},
+        ],
+        seqId: [
+          {required: true, message: "请输入论文的引用次序"}
+        ]
+
+      }
     };
-  },
+  }
+  ,
+
   mounted() {
     // 这里比较重要，在表格dom渲染完成后，再进行事件的添加操作
     this.tableShow = true;
@@ -318,10 +410,13 @@ export default {
       // 表格添加列宽变化
       this.tableInit();
     });
-  },
+  }
+  ,
   created() {
     const _this = this;
     this.page(1);
-  },
-};
+  }
+  ,
+}
+;
 </script>

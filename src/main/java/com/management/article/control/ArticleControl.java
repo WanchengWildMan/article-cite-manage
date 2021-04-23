@@ -43,7 +43,8 @@ public class ArticleControl {
         LOG.debug(articleQueryParam.getPublishHouse());
         List<ArticleDO> articleDOs = new ArrayList<>();
         Map resultMap = new HashMap();
-        
+        resultMap.put("status", 200);
+
         List<String> errors = new ArrayList<>();
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
         try {
@@ -57,9 +58,11 @@ public class ArticleControl {
             }
         } catch (Exception e) {
             errors.add(e.getMessage());
+            resultMap.put("status", 400);
 
         }
         resultMap.put("errors", errors);
+        if (articleDOs.size() > 0) resultMap.put("status", 401);
         resultMap.put("content", articleDOs);
         return resultMap;
     }
@@ -71,18 +74,20 @@ public class ArticleControl {
 
         LOG.debug(articleDO.getAuthor());
         Map resultMap = new HashMap();
-        
+        resultMap.put("status", 200);
+
         List<String> errors = new ArrayList<>();
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
-        int ok = 0;
+        int successNum = 0;
         try {
-            ok = articleDAO.add(articleDO);
+            successNum = articleDAO.add(articleDO);
 
         } catch (Exception e) {
             errors.add(e.getMessage());
+            resultMap.put("status", 400);
         }
         resultMap.put("errors", errors);
-        resultMap.put("ok", ok);
+        resultMap.put("successNum", successNum);
         return resultMap;
     }
 
@@ -91,7 +96,7 @@ public class ArticleControl {
     private Map addMul(@RequestBody List<ArticleDO> articleDOList) {
         int successNum = 0;
         Map resultMap = new HashMap();
-        
+        resultMap.put("status", 200);
         List<String> errors = new ArrayList<>();
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
         for (ArticleDO articleDO : articleDOList) {
@@ -99,9 +104,12 @@ public class ArticleControl {
                 if (articleDAO.add(articleDO) > 0) successNum++;
             } catch (Exception e) {
                 errors.add(e.getMessage());
+                resultMap.put("status", 400);
             }
         }
         resultMap.put("errors", errors);
+        if (successNum > 0) resultMap.put("status", 401);
+
         resultMap.put("successNum", successNum);
         return resultMap;
 
@@ -111,21 +119,23 @@ public class ArticleControl {
     @ResponseBody
     private Map updateOne(@RequestBody ArticleDO articleDO) {
         Map resultMap = new HashMap();
-        
+        resultMap.put("status", 200);
+
         System.out.println(articleDO.getPublishYear());
         List<String> errors = new ArrayList<>();
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
 
-        int ok = 0;
+        int successNum = 0;
         try {
-            ok = articleDAO.update(articleDO);
+            successNum = articleDAO.update(articleDO);
         } catch (Exception e) {
             e.printStackTrace();
             errors.add(e.getMessage());
+            resultMap.put("status", 400);
 
         }
         resultMap.put("errors", errors);
-        resultMap.put("successNum", ok);
+        resultMap.put("successNum", successNum);
         return resultMap;
 
     }
@@ -136,15 +146,18 @@ public class ArticleControl {
     private Map deleteOneById(@RequestParam int id) {
         int successNum = 0;
         Map resultMap = new HashMap();
-        
+        resultMap.put("status", 200);
+
         List<String> errors = new ArrayList<>();
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
         try {
             successNum += articleDAO.deleteById(id);
         } catch (Exception e) {
             errors.add(e.getMessage());
+            resultMap.put("status", 400);
         }
         resultMap.put("errors", errors);
+        if (successNum > 0) resultMap.put("status", 401);
         resultMap.put("successNum", successNum);
         return resultMap;
     }
@@ -154,7 +167,8 @@ public class ArticleControl {
     private Map deleteMulById(@RequestBody List<Integer> idList) {
         int successNum = 0;
         Map resultMap = new HashMap();
-        
+        resultMap.put("status", 200);
+
         List<String> errors = new ArrayList<>();
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
         for (int id : idList) {
@@ -162,9 +176,11 @@ public class ArticleControl {
                 successNum += articleDAO.deleteById(id);
             } catch (Exception e) {
                 errors.add(e.getMessage());
+                resultMap.put("status", 400);
             }
         }
         resultMap.put("errors", errors);
+        if (successNum > 0) resultMap.put("status", 401);
         resultMap.put("successNum", successNum);
         return resultMap;
     }
@@ -176,7 +192,8 @@ public class ArticleControl {
         int successNum = 0;
         LOG.debug(articleDOList.get(0).getArticleName());
         Map resultMap = new HashMap();
-        
+        resultMap.put("status", 200);
+
         List<String> errors = new ArrayList<>();
         for (ArticleDO articleDO : articleDOList) {
             try {
@@ -184,9 +201,11 @@ public class ArticleControl {
 
             } catch (Exception e) {
                 errors.add(e.getMessage());
+                resultMap.put("status", 400);
             }
         }
         resultMap.put("errors", errors);
+        if (successNum > 0) resultMap.put("status", 401);
         resultMap.put("successNum", successNum);
         return successNum;
     }
