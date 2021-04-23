@@ -81,30 +81,30 @@ export default {
         // _this.total = resp.data.totalElements
       });
     },
-    handleCellClick:function(row, column, cell, event){
-      emptransfer.addClass(cell,'current-cell');
-      if(emptransfer.getChildElement(cell,3) !== 0){
-        var _inputParentNode =emptransfer.getChildElement(cell,3);
-        if(_inputParentNode.hasChildNodes()&& _inputParentNode.childNodes.length > 2) {
-          var _inputNode = _inputParentNode.childNodes[2];
-          if(_inputNode.tagName === 'INPUT'){
-            _inputNode.focus();
-          }
-        }
-      }
-    },
+    // handleCellClick:function(row, column, cell, event){
+    //   emptransfer.addClass(cell,'current-cell');
+    //   if(emptransfer.getChildElement(cell,3) !== 0){
+    //     var _inputParentNode =emptransfer.getChildElement(cell,3);
+    //     if(_inputParentNode.hasChildNodes()&& _inputParentNode.childNodes.length > 2) {
+    //       var _inputNode = _inputParentNode.childNodes[2];
+    //       if(_inputNode.tagName === 'INPUT'){
+    //         _inputNode.focus();
+    //       }
+    //     }
+    //   }
+    // },
 //input框失去焦点事件
-    handleInputBlur:function(event){   //当 input 失去焦点 时,input 切换为 span，并且让下方 表格消失（注意，与点击表格事件的执行顺序）
-      var _event = event;
-      setTimeout(function(){
-        var _inputNode = _event.target;
-        if(emptransfer.getParentElement(_inputNode,4)!==0){
-          var _cellNode = emptransfer.getParentElement(_inputNode,4);
-          emptransfer.removeClass(_cellNode,'current-cell');
-          emptransfer.removeClass(_cellNode,'current-cell2');
-        }
-      },200);
-    },
+//     handleInputBlur:function(event){   //当 input 失去焦点 时,input 切换为 span，并且让下方 表格消失（注意，与点击表格事件的执行顺序）
+//       var _event = event;
+//       setTimeout(function(){
+//         var _inputNode = _event.target;
+//         if(emptransfer.getParentElement(_inputNode,4)!==0){
+//           var _cellNode = emptransfer.getParentElement(_inputNode,4);
+//           emptransfer.removeClass(_cellNode,'current-cell');
+//           emptransfer.removeClass(_cellNode,'current-cell2');
+//         }
+//       },200);
+//     },
     tableInit() {
       let self = this;
       /* 获取头部td集合,这边是测试表格，只有一个所以直接el-table__body 的0，后续可以在<el-table> 加class，

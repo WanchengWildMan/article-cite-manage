@@ -1,8 +1,7 @@
 <template>
   <div>
-<!--    TODO-->
+    <!--    TODO-->
     <el-table :data="tableData"
-              @cell-click="handleCellClick"
               border
               style="width: 70%; border-radius:13px;"
 
@@ -12,30 +11,60 @@
 
       </el-table-column>
       <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="seqId" label="引用次序" width="150">
-        <template scope="scope">
-          <div class="input-box" style="display: none" >
-            <el-input size="small" @blur="handleInputBlur" v-model="scope.row.description"></el-input>
-          </div>
-          <span>{{ scope.row.seqId }}</span>
+        <template slot-scope="scope">
+          <el-input-number
+              v-model="scope.row.seqId"
+              v-show="scope.row.show"
+              size="mini"
+              :min="0"
+              type="number"
+          />
+          <span v-show="!scope.row.show">{{ scope.row.seqId }}</span>
         </template>
       </el-table-column>
       <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="articleName" label="论文题目" width="150">
+        <template slot-scope="scope">
+          <el-input
+              v-model="scope.row.articleName"
+              v-show="scope.row.show"
+              :controls="false"
+              size="mini"
+              style="width: 90%"
+          />
+          <span v-show="!scope.row.show">{{ scope.row.articleName }}</span>
+        </template>
       </el-table-column>
       <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="author" label="作者" width="120">
       </el-table-column>
       <el-table-column sortable :sort-orders="[`ascending`,`descending`]" prop="articleType" label="论文类型" width="150">
       </el-table-column>
 
-      <el-table-column sortable="right" label="操作" width="100">
+      <el-table-column sortable="right" label="操作">
         <template slot-scope="scope">
-          <el-button @click="edit(scope.row)" type="text" size="small"
-          >修改
+          <el-button @click="saveData(scope.row)"
+                     type="success"
+                     size="mini"
+                     icon="el-icon-success"
+          >保存
           </el-button
           >
-          <el-button @click="deleteArticle(scope.row)" type="text" size="small"
+          <el-button
+              @click="handleEdit(row)"
+              type="primary"
+              size="mini"
+              icon="el-icon-edit"
+          >编辑
+          </el-button
+          >
+          <el-button @click="deleteArticle(scope.row)"
+                     type="danger"
+                     size="mini"
+                     class="btn-text-red"
+                     icon="el-icon-delete"
           >删除
           </el-button
           >
+
         </template>
       </el-table-column>
     </el-table>
@@ -71,25 +100,49 @@ export default {
       _this.$alert(`论文 ${row.articleName} ${opr}成功！`, "消息", {
         confirmButtonText: "确定",
         callback: (action) => {
-          window.location.reload();
+          // window.location.reload();
         },
       });
     },
     deleteArticle(row) {
       const _this = this;
-      axios
-          .delete(`http://localhost:${this.port}/admin/deleteOneById?id=` + row.id)
-          .then(function (resp) {
-            // console.log(_this)
-            _this.showAlert(_this, resp, row, "删除")
-          });
+      const index = row.$index;
+      this.$confirm("此操作将永久删除, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+          .then(() => {
+            _this.tableData.splice(index, 1)
+            axios
+                .delete(`http://localhost:${this.port}/admin/deleteOneById?id=` + row.id)
+                .then(function (resp) {
+                  // console.log(_this)
+                  _this.showAlert(_this, resp, row, "删除")
+                });
+            _this.$message({
+              type: "success",
+              message: "删除成功!",
+            });
+          })
+          .catch(() => {
+            _this.$message({
+              type: "info",
+              message: "已取消删除",
+            })
+          })
+
     },
-    edit(row) {
+    saveData(row) {
       const _this = this;
       axios.post(`http://localhost:${this.port}/admin/updateOne`, row).then(function (resp) {
+            console.log("POST")
             _this.showAlert(_this, resp, row, "修改");
           }
       )
+    },
+    handleEdit(row){
+      for(let col of row)
     },
     page(currentPage) {
       const _this = this;
@@ -104,30 +157,30 @@ export default {
       });
     },
     //单元格点击后，显示input，并让input 获取焦点
-    handleCellClick: function (row, column, cell, event) {
-      emptransfer.addClass(cell, 'current-cell');
-      if (emptransfer.getChildElement(cell, 3) !== 0) {
-        var _inputParentNode = emptransfer.getChildElement(cell, 3);
-        if (_inputParentNode.hasChildNodes() && _inputParentNode.childNodes.length > 2) {
-          var _inputNode = _inputParentNode.childNodes[2];
-          if (_inputNode.tagName === 'INPUT') {
-            _inputNode.focus();
-          }
-        }
-      }
-    },
+    // handleCellClick: function (row, column, cell, event) {
+    //   emptransfer.addClass(cell, 'current-cell');
+    //   if (emptransfer.getChildElement(cell, 3) !== 0) {
+    //     var _inputParentNode = emptransfer.getChildElement(cell, 3);
+    //     if (_inputParentNode.hasChildNodes() && _inputParentNode.childNodes.length > 2) {
+    //       var _inputNode = _inputParentNode.childNodes[2];
+    //       if (_inputNode.tagName === 'INPUT') {
+    //         _inputNode.focus();
+    //       }
+    //     }
+    //   }
+    // },
 //input框失去焦点事件
-    handleInputBlur: function (event) {   //当 input 失去焦点 时,input 切换为 span，并且让下方 表格消失（注意，与点击表格事件的执行顺序）
-      var _event = event;
-      setTimeout(function () {
-        var _inputNode = _event.target;
-        if (emptransfer.getParentElement(_inputNode, 4) !== 0) {
-          var _cellNode = emptransfer.getParentElement(_inputNode, 4);
-          emptransfer.removeClass(_cellNode, 'current-cell');
-          emptransfer.removeClass(_cellNode, 'current-cell2');
-        }
-      }, 200);
-    },
+//     handleInputBlur: function (event) {   //当 input 失去焦点 时,input 切换为 span，并且让下方 表格消失（注意，与点击表格事件的执行顺序）
+//       var _event = event;
+//       setTimeout(function () {
+//         var _inputNode = _event.target;
+//         if (emptransfer.getParentElement(_inputNode, 4) !== 0) {
+//           var _cellNode = emptransfer.getParentElement(_inputNode, 4);
+//           emptransfer.removeClass(_cellNode, 'current-cell');
+//           emptransfer.removeClass(_cellNode, 'current-cell2');
+//         }
+//       }, 200);
+//     },
 
     tableInit() {
       let self = this;
@@ -225,6 +278,13 @@ export default {
           : element.attachEvent("on" + type, listener);
     },
   },
+  watch: {
+    tableData: {
+      handler(newTable, oldTable) {
+
+      }
+    }
+  }
   // 防止全局组件污染，故data用函数
   data() {
     return {
