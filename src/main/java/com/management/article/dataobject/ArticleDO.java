@@ -37,10 +37,11 @@ public class ArticleDO {
      */
     private String publishHouse;
 
+
     /**
      * 出版时间
      */
-    private short publishYear;
+    private String publishYear;
     /**
      * 卷号(期号)
      */
@@ -62,7 +63,6 @@ public class ArticleDO {
     public long getId() {
         return id;
     }
-
 
 
     public void setId(long id) {
@@ -110,11 +110,11 @@ public class ArticleDO {
         this.publishHouse = publishHouse;
     }
 
-    public short getPublishYear() {
+    public String getPublishYear() {
         return publishYear;
     }
 
-    public void setPublishYear(short publishYear) {
+    public void setPublishYear(String publishYear) {
         this.publishYear = publishYear;
     }
 

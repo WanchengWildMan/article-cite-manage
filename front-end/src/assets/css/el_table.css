@@ -1,16 +1,23 @@
-/deep/.el-table .cell {
-  overflow: scroll;
-  text-overflow: unset;
+
+/deep/ .el-table .cell {
+    overflow: scroll;
+    text-overflow: unset;
 }
+
 /deep/ .el-table,
 /deep/ .el-table--border {
-  border: 3px solid grey;
+    border: 3px solid grey;
+    border-radius: 20px
+}
+
+/deep/ .el-table {
+    width: auto;
 }
 
 /deep/ .el-table--border td {
-  border-right: 2px solid #ebeef5;
+    border-right: 2px solid #ebeef5;
 }
 
 .el-table td {
-  border-bottom: 2px solid #ebeef5;
+    border-bottom: 2px solid #ebeef5;
 }

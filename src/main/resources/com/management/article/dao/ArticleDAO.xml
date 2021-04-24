@@ -59,7 +59,7 @@
         </if>
         <if test="publishHouse!=''">publish_house=#{publishHouse} ,
         </if>
-        <if test="publishYear!=0">publish_year=#{publishYear},
+        <if test="publishYear!=''">publish_year=#{publishYear},
         </if>
         <if test="num!=''">num=#{num} ,
         </if>
