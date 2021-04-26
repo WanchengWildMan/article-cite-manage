@@ -3,6 +3,7 @@ package com.management.article.utils;
 import java.text.SimpleDateFormat;
 
 public class ArticleUtil {
+    //TODO:正则表达式从标准格式获取
     public static final String MONOGRAPH = "M";
     public static final String ARTICLE_COLLECTION = "C";
     public static final String NEWSPAPER_ARTICLE = "N";

@@ -1,23 +1,26 @@
-
-/deep/ .el-table .cell {
-    overflow: scroll;
-    text-overflow: unset;
+template {
+  display: flex;
 }
 
-/deep/ .el-table,
-/deep/ .el-table--border {
-    border: 3px solid grey;
-    border-radius: 20px
+.el-table .cell {
+  overflow: scroll;
+  text-overflow: unset;
 }
 
-/deep/ .el-table {
-    width: auto;
+.el-table,
+.el-table--border {
+  border: 3px solid grey;
+  border-radius: 20px;
 }
 
-/deep/ .el-table--border td {
-    border-right: 2px solid #ebeef5;
+.el-table {
+  width: auto;
+}
+
+.el-table--border td {
+  border-right: 2px solid #ebeef5;
 }
 
 .el-table td {
-    border-bottom: 2px solid #ebeef5;
+  border-bottom: 2px solid #ebeef5;
 }

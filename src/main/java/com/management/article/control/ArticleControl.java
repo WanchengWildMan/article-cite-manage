@@ -17,6 +17,7 @@ import java.sql.SQLDataException;
 import java.time.LocalDate;
 import java.util.*;
 
+
 @Controller
 @RequestMapping("/admin")
 public class ArticleControl {
@@ -120,7 +121,9 @@ public class ArticleControl {
     private Map updateOne(@RequestBody ArticleDO articleDO) {
         Map resultMap = new HashMap();
         resultMap.put("status", 200);
-
+        Map logMap = new HashMap();
+        logMap.put("body", articleDO);
+        LOG.info(articleDO.getArticleName());
         System.out.println(articleDO.getPublishYear());
         List<String> errors = new ArrayList<>();
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
