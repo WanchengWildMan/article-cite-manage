@@ -49,7 +49,7 @@
         @click="uploadShow = true"
         >导入</el-button
       >
-      <el-button type="success" icon="el-icon-download" @click="downloadTodos"
+      <el-button type="success" icon="el-icon-download" @click="downloadExcel"
         >导出</el-button
       >
     </template>
@@ -755,10 +755,10 @@ export default {
       this.editShow = false;
     },
 
-    downloadTodos() {
+    downloadExcel() {
       this.$ajax({
         method: "post",
-        url: "todos/download",
+        url: "admin/downloadExcel",
         responseType: "blob",
         data: this.filtedData,
       })
@@ -859,7 +859,7 @@ export default {
       );
     },
     uploadUrl() {
-      return `${this.$ajax.defaults.baseURL}todos/upload`;
+      return `${this.$ajax.defaults.baseURL}admin/uploadExcel`;
     },
   },
 };
