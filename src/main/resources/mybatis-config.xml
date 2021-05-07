@@ -6,9 +6,10 @@
     <properties resource="application.properties"/>
     <settings>
         <setting name="logImpl" value="LOG4J"/>
+        <setting name="jdbcTypeForNull" value="NULL"/>
     </settings>
     <typeAliases>
-<!--        目录级数相差太大就找不到了-->
+        <!--        目录级数相差太大就找不到了-->
         <typeAlias alias="articleDO" type="com.management.article.dataobject.ArticleDO"/>
     </typeAliases>
     <mappers>

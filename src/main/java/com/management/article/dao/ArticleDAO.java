@@ -10,6 +10,8 @@ import java.util.*;
 public interface ArticleDAO {
     int add(ArticleDO articleDO);
 
+    int batchAdd(@Param("articleDOList") List<ArticleDO> articleDOList);
+
     int update(ArticleDO articleDO);
 
     int deleteByObject(ArticleDO articleDO);
@@ -18,6 +20,9 @@ public interface ArticleDAO {
 
     List<ArticleDO> findByObject(ArticleDO articleDO);
 
-    List<ArticleDO> findById(@Param("id") String id);
+    List<ArticleDO> findById(@Param("id") long id);
+
+
+
 
 }

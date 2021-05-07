@@ -20,7 +20,15 @@
 
     <insert id="add" parameterType="com.management.article.dataobject.ArticleDO" useGeneratedKeys="true"
             keyProperty="id">
-    insert into article values(#{id},#{seqId},#{author},#{articleName},#{articleType},#{publishHouse},#{publishYear},#{num},#{startPage},#{endPage},now(),now());
+    insert into article values
+    (#{id},#{seqId},#{author},#{articleName},#{articleType},#{publishHouse},#{publishYear},#{num},#{startPage},#{endPage},now(),now());
+    </insert>
+    <insert id="batchAdd" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        insert into article values
+        <foreach collection="articleDOList" item="it" index="index" separator=",">
+            (#{it.id},#{it.seqId},#{it.author},#{it.articleName},#{it.articleType},#{it.publishHouse},#{it.publishYear},#{it.num},#{it.startPage},#{it.endPage},now(),now())
+        </foreach>
+
     </insert>
     <delete id="deleteById">
     delete from article where id=#{id}
@@ -70,13 +78,15 @@
         gmt_modified=now()
         where id=#{id}
     </update>
-    <select id="findById">
-        select * from article
+    <select id="findById" resultType="com.management.article.dataobject.ArticleDO">
+        select id as id,seq_id seqId,author as author,article_name as articleName,article_type as
+        articleType,publish_house as publishHouse,publish_year as publishYear,num as num,start_page as
+        startPage,end_page as endPage,gmt_created as gmtCreated,gmt_modified as gmtModified from article
         <if test="id!=0">
             where id=#{id}
         </if>
     </select>
-<!--    返回字段要与模型类中字段一致-->
+    <!--    返回字段要与模型类中字段一致-->
     <select id="findByObject" resultType="com.management.article.dataobject.ArticleDO"
             parameterType="com.management.article.dataobject.ArticleDO">
         select id as id,seq_id seqId,author as author,article_name as articleName,article_type as
@@ -90,11 +100,12 @@
             and seq_id=#{seqId}
         </if>
         <if test="author!=''">
-            and author=#{author}
+            and author like concat('%', #{author},'%')
         </if>
         <if test="articleName!=''">
-            and article_name like #{articleName}
+            and article_name like concat('%',#{articleName},'%')
         </if>
+
         <!--        <if test="publishHouse!=''">-->
         <!--            and publish_house like %#{publishHouse}%-->
         <!--        </if>-->

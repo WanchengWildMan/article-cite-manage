@@ -2,21 +2,23 @@ package com.management.article.control;
 
 import com.management.article.dao.ArticleDAO;
 import com.management.article.dataobject.ArticleDO;
+import com.management.article.utils.ArticleDOFactory;
 import com.management.article.utils.ArticleUtil;
+import com.management.article.utils.ClassFieldUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.xssf.usermodel.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.io.IOException;
+import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLDataException;
 import java.time.LocalDate;
 import java.util.*;
-
 
 @Controller
 @RequestMapping("/admin")
@@ -51,10 +53,8 @@ public class ArticleControl {
         try {
             articleDOs = articleDAO.findByObject(articleQueryParam);
 
-
             for (ArticleDO articleDO : articleDOs) {
-                System.out.println(articleDO.getArticleName()
-                );
+                System.out.println(articleDO.getArticleName());
 
             }
         } catch (Exception e) {
@@ -63,11 +63,11 @@ public class ArticleControl {
 
         }
         resultMap.put("errors", errors);
-        if (articleDOs.size() > 0) resultMap.put("status", 401);
+        if (articleDOs.size() > 0)
+            resultMap.put("status", 401);
         resultMap.put("content", articleDOs);
         return resultMap;
     }
-
 
     @RequestMapping("addOne")
     @ResponseBody
@@ -102,14 +102,16 @@ public class ArticleControl {
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
         for (ArticleDO articleDO : articleDOList) {
             try {
-                if (articleDAO.add(articleDO) > 0) successNum++;
+                if (articleDAO.add(articleDO) > 0)
+                    successNum++;
             } catch (Exception e) {
                 errors.add(e.getMessage());
                 resultMap.put("status", 400);
             }
         }
         resultMap.put("errors", errors);
-        if (successNum > 0) resultMap.put("status", 401);
+        if (successNum > 0)
+            resultMap.put("status", 401);
 
         resultMap.put("successNum", successNum);
         return resultMap;
@@ -143,7 +145,6 @@ public class ArticleControl {
 
     }
 
-
     @DeleteMapping("deleteOneById")
     @ResponseBody
     private Map deleteOneById(@RequestParam int id) {
@@ -160,7 +161,8 @@ public class ArticleControl {
             resultMap.put("status", 400);
         }
         resultMap.put("errors", errors);
-        if (successNum > 0) resultMap.put("status", 401);
+        if (successNum > 0)
+            resultMap.put("status", 401);
         resultMap.put("successNum", successNum);
         return resultMap;
     }
@@ -183,12 +185,13 @@ public class ArticleControl {
             }
         }
         resultMap.put("errors", errors);
-        if (successNum > 0) resultMap.put("status", 401);
+        if (successNum > 0)
+            resultMap.put("status", 401);
         resultMap.put("successNum", successNum);
         return resultMap;
     }
 
-    //DEPRECIATE
+    // DEPRECIATE
     @DeleteMapping("deleteMulByObject")
     @ResponseBody
     private int deleteMulByObject(@RequestBody List<ArticleDO> articleDOList) {
@@ -208,8 +211,39 @@ public class ArticleControl {
             }
         }
         resultMap.put("errors", errors);
-        if (successNum > 0) resultMap.put("status", 401);
+        if (successNum > 0)
+            resultMap.put("status", 401);
         resultMap.put("successNum", successNum);
         return successNum;
+    }
+
+    @PostMapping("uploadExcel")
+    @ResponseBody
+    public Map batchAddExcel(@RequestBody XSSFWorkbook xssfWorkbook) throws Exception {
+
+        List articleDOList = ArticleUtil.parseArticlesFromExcel(xssfWorkbook);
+        Map resultMap = this.addMul(articleDOList);
+        return resultMap;
+    }
+
+    @PostMapping("/uploadFormatted")
+    @ResponseBody
+    public Map batchAddFormatted(@RequestBody File file) {
+        Map resultMap = new HashMap();
+        resultMap.put("status", 200);
+
+        List<String> errors = new ArrayList<>();
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            BufferedReader br = new BufferedReader(
+                    new InputStreamReader(fis, "UTF-8"));
+//            while(br.) {
+//                br.readLine();
+//            }
+        } catch (Exception e) {
+            errors.add(e.getMessage());
+            resultMap.put("status", 400);
+        }
+        return resultMap;
     }
 }
