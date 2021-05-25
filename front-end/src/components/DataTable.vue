@@ -6,11 +6,11 @@
         type="danger"
         icon="el-icon-circle-plus-outline"
         @click="handleAdd"
-        >添加</el-button
-      >
+      >添加
+      </el-button>
     </template>
     <!-- TODO -->
-    <!-- 搜索框 -->
+    <!--    搜索框-->
     <template slot="search-field">
       <el-input
         v-model="searchStr"
@@ -20,7 +20,21 @@
     </template>
     <!-- 过滤条件区 -->
     <template slot="filter-field">
-      <!-- 状态过滤框 -->
+      <el-input-number
+        v-model="filterId"
+        min="1"
+        step="1"
+        placeholder="搜索文献编号"
+      ></el-input-number>
+      <!--      文献题目过滤框-->
+      <el-input
+        autosize
+        v-model="filterName"
+        suffix-icon="el-icon-search"
+        placeholder="搜索文献题目"
+        style="width: 150px"
+      ></el-input>
+      <!-- 文献类型过滤框 -->
       <el-select v-model="filterType" placeholder="选择类型">
         <el-option label="全部" value=""></el-option>
         <el-option
@@ -30,31 +44,50 @@
           :value="type.value"
         ></el-option>
       </el-select>
-      <!-- 时间过滤框 -->
+      <!--作者过滤框-->
+      <el-input
+        v-model="filterAuthor"
+        suffix-icon="el-icon-search"
+        placeholder="搜索作者"
+        style="width: 150px"
+      ></el-input>
+      <!-- 出版时间过滤框 -->
       <el-date-picker
-        v-model="filterDates"
+        v-model="filterYear_start"
         type="year"
-        start-placeholder="起始时间"
-        end-placeholder="结束时间"
+        format="yyyy"
+        placeholder="起始年份"
       ></el-date-picker>
+
+      <el-date-picker
+        v-model="filterYear_end"
+        type="year"
+        placeholder="结束年份"
+      ></el-date-picker>
+      <el-button
+        type="primary"
+        icon="el-icon-search"
+        @click="searchArticle"
+      ></el-button>
     </template>
     <!-- 右按钮区 -->
-    <template slot="right-field">
-      <el-button type="primary" icon="el-icon-refresh" @click="update"
-        >刷新</el-button
-      >
+    <template slot="right-field" style="display: flex">
+      <el-button type="primary" icon="el-icon-refresh" @click="refresh">
+        刷新
+      </el-button>
       <el-button
         type="warning"
         icon="el-icon-upload2"
         @click="uploadShow = true"
-        >导入</el-button
       >
-      <el-button type="success" icon="el-icon-download" @click="downloadExcel"
-        >导出</el-button
-      >
+        导入
+      </el-button>
+      <el-button type="success" icon="el-icon-download" @click="downloadExcel">
+        导出
+      </el-button>
     </template>
     <!-- 表格区 -->
-    <el-table :data="tableData" border id="articleTable" ref="articleTable">
+    <el-table :data="filtedData" border id="articleTable" ref="articleTable">
       <el-table-column
         v-for="item of tableHeadData"
         :key="item.key"
@@ -69,8 +102,8 @@
           <span v-if="item.name == 'index'">{{ scope.$index + 1 }}</span>
           <template v-else>
             <span v-show="item.unModifiable || !scope.row.show">{{
-              scope.row[item.name]
-            }}</span>
+                scope.row[item.name]
+              }}</span>
             <el-form :rules="formRules">
               <el-form-item v-show="!scope.row.unModifiable && scope.row.show">
                 <!-- 判断是展示列表还是新增
@@ -120,14 +153,14 @@
             type="success"
             size="mini"
             icon="el-icon-success"
-            >保存
+          >保存
           </el-button>
           <el-button
             @click="handleEdit(scope.row)"
             type="primary"
             size="mini"
             icon="el-icon-edit"
-            >编辑
+          >编辑
           </el-button>
           <el-button
             @click="deleteArticle(scope.row)"
@@ -135,7 +168,7 @@
             size="mini"
             class="btn-text-red"
             icon="el-icon-delete"
-            >删除
+          >删除
           </el-button>
         </template>
       </el-table-column>
@@ -145,6 +178,7 @@
       layout="prev, pager, next"
       :page-size="pageEachSize"
       :total="total"
+      :current-page="currentPage"
       @current-change="page"
       @size-change="pageSizeChange"
     >
@@ -152,11 +186,11 @@
     <!-- 对话框 -->
     <edit-dialog
       :show="editShow"
-      title="新建论文条目"
+      title="新建文献条目"
       @close="closeEditDialog"
       @save="saveNewRecord"
     >
-      <!-- 论文信息表单 -->
+      <!-- 文献信息表单 -->
       <el-form :model="articleModel" ref="articleAddForm" :rules="formRules">
         <el-form-item
           v-for="item of filterHeadDataToForm()"
@@ -172,11 +206,11 @@
               :key="author"
               closable
               @close="removeCurrentAuthor(author)"
-              >{{ author }}
+            >{{ author }}
             </el-tag>
 
             <span @keyup.enter="addCurrentAuthor"
-              ><el-input v-model="inputAuthor"></el-input
+            ><el-input v-model="inputAuthor"></el-input
             ></span>
 
             <el-button
@@ -184,8 +218,8 @@
               size="small"
               icon="el-icon-plus"
               @click="addCurrentAuthor"
-              >添加文献作者</el-button
-            >
+            >添加文献作者
+            </el-button>
           </div>
           <!-- 特判-选项 -->
           <el-select
@@ -227,15 +261,36 @@
     </edit-dialog>
     <!-- 上传文件对话框 -->
     <el-dialog title="上传文件" :visible.sync="uploadShow">
-      <el-upload :action="uploadUrl" :on-success="uploadSuccess">
-        <el-button type="primary" icon="el-icon-upload">上传</el-button>
+      <el-upload
+        ref="uploadexcel"
+        accept=".xlsx"
+        :action="uploadExcelURL()"
+        list-type="picture-card"
+        :on-success="uploadSuccess"
+        :file-list="currentAddFileList"
+      >
+        <el-button type="primary" icon="el-icon-upload" @click="uploadExcelNow"
+        >立即上传
+        </el-button>
+      </el-upload>
+      <el-upload
+        ref="uploadtxt"
+        accept=".txt"
+        :action="uploadTxtURL()"
+        list-type="picture-card"
+        :on-success="uploadSuccess"
+        :file-list="currentAddFileList"
+      >
+        <el-button type="primary" icon="el-icon-upload" @click="uploadTxtNow"
+        >立即上传
+        </el-button>
       </el-upload>
       <span slot="footer">
         <el-button
           type="danger"
           icon="el-icon-close"
           @click="uploadShow = false"
-          >关闭</el-button
+        >关闭</el-button
         >
       </span>
     </el-dialog>
@@ -246,6 +301,7 @@
 import ViewPage from "./ViewPage";
 import EditDialog from "./EditDialog";
 import axios from "axios";
+
 export default {
   components: {
     ViewPage,
@@ -259,23 +315,21 @@ export default {
       total: 10,
       displayLogic: ["none", "block"],
       articleTypes: [
-        { value: "J", label: "[J]期刊" },
-        { value: "M", label: "[M]专著" },
-        { value: "C", label: "[C]论文集" },
-        { value: "D", label: "[D]学位论文" },
-        { value: "R", label: "[R]报告" },
-        { value: "S", label: "[S]标准" },
-        { value: "P", label: "[P]专利" },
+        {value: "J", label: "[J]期刊"},
+        {value: "M", label: "[M]专著"},
+        {value: "C", label: "[C]文献集"},
+        {value: "D", label: "[D]学位文献"},
+        {value: "R", label: "[R]报告"},
+        {value: "S", label: "[S]标准"},
+        {value: "P", label: "[P]专利"},
+        {value: "DB/CD", label: "[DB/CD]数据库（CD）"},
+        {value: "DB/OL", label: "[DB/CD]数据库（在线）"},
       ],
-
-      filterType: "",
-      searchAuthorStr: "",
-      searchNameStr: "",
       inputAuthor: "",
       formRules: {
         //要在el-form里面加
         articleName: [
-          { required: true, message: "请填写论文题目", trigger: "blur" },
+          {required: true, message: "请填写文献题目", trigger: "blur"},
         ],
         // author: [{ required: true, message: "请输入作者", trigger: "blur" }],
         publishYear: [
@@ -285,11 +339,12 @@ export default {
             trigger: "change",
           },
         ],
-        num: [{ required: true, message: "请填写卷号(期号)", trigger: "blur" }],
+        num: [{required: true, message: "请填写卷号(期号)", trigger: "blur"}],
 
-        seqId: [{ required: true, message: "请输入论文的引用次序" }],
+        seqId: [{required: true, message: "请输入文献的引用次序"}],
       },
       articleModel: {
+        id: "",
         articleName: "",
         author: "",
         articleType: "",
@@ -307,7 +362,13 @@ export default {
           unModifiable: true,
           autoAdd: true,
         },
-
+        {
+          name: "id",
+          label: "文献编号",
+          minWidth: "60px",
+          unModifiable: true,
+          autoAdd: true,
+        },
         {
           name: "articleName",
           minWidth: "180px",
@@ -328,13 +389,15 @@ export default {
           isSelect: true,
 
           selectList: [
-            { value: "J", label: "[J]期刊" },
-            { value: "M", label: "[M]专著" },
-            { value: "C", label: "[C]论文集" },
-            { value: "D", label: "[D]学位论文" },
-            { value: "R", label: "[R]报告" },
-            { value: "S", label: "[S]标准" },
-            { value: "P", label: "[P]专利" },
+            {value: "J", label: "[J]期刊"},
+            {value: "M", label: "[M]专著"},
+            {value: "C", label: "[C]文献集"},
+            {value: "D", label: "[D]学位文献"},
+            {value: "R", label: "[R]报告"},
+            {value: "S", label: "[S]标准"},
+            {value: "P", label: "[P]专利"},
+            {value: "DB/CD", label: "[DB/CD]数据库（CD）"},
+            {value: "DB/OL", label: "[DB/CD]数据库（在线）"},
           ],
         },
         {
@@ -400,10 +463,15 @@ export default {
           author: "太宰治",
         },
       ],
+      tableDataAll: [],
       data: [],
-      searchStr: "",
+      searchStr: null,
+      filterId: 0,
+      filterAuthor: "",
+      filterName: "",
       filterType: "",
-      filterDates: null,
+      filterYear_start: 0,
+      filterYear_end: 0,
       statusColors: ["info", "primary", "warning", "success"],
       sortProp: "",
       sortOrder: "",
@@ -411,13 +479,14 @@ export default {
       currentPageSize: 3,
       editShow: false,
       uploadShow: false,
-
+      currentAddFileList: [],
       currentAuthors: [],
     };
   },
   created() {
     setTimeout(() => {
-      this.page(1);
+      this.getTableData();
+      // this.page(1)
     }, 300);
   },
   mounted() {
@@ -428,8 +497,12 @@ export default {
       this.tableResizeInit();
       // console.log(this.tableHeadData)
     });
-    console.log(this.tableData);
-    this.page(1);
+    // console.log(this.tableData);
+    setTimeout(() => {
+      this.getTableData();
+      // this.page(1)
+    }, 300);
+    // this.page(1);
     for (let i in this.tableHeadData) {
       this.tableHeadData[i]["modelName"] =
         "tableHeadData." + this.tableHeadData[i].name;
@@ -437,7 +510,6 @@ export default {
   },
   methods: {
     handleCellClick: function (row, column, cell, event) {
-      console.log(cell);
       let isEdit = cell.getAttribute("isEdit");
       if (isEdit == undefined || isEdit == "false" || isEdit == "null")
         isEdit = false;
@@ -445,10 +517,10 @@ export default {
 
       cell.querySelector(".el-form-item").style.display = this.displayLogic[
         isEdit ? 1 : 0
-      ];
+        ];
       cell.querySelector("span").style.display = this.displayLogic[
         isEdit ? 0 : 1
-      ];
+        ];
       cell.setAttribute("isEdit", isEdit);
     },
     hasError(resp) {
@@ -458,7 +530,7 @@ export default {
       // const _this=this;
       if (this.hasError(resp)) {
         _this.$alert(
-          `论文  + ${row.articleName} +  ${opr}失败！原因：${resp.data.errors}`,
+          `文献  + ${row.articleName} +  ${opr}失败！原因：${resp.data.errors}`,
           "消息",
           {
             confirmButtonText: "确定",
@@ -469,7 +541,7 @@ export default {
         );
         return false;
       }
-      _this.$alert(`论文 ${row.articleName} ${opr}成功！`, "消息", {
+      _this.$alert(`文献 ${row.articleName} ${opr}成功！`, "消息", {
         confirmButtonText: "确定",
         callback: (action) => {
           window.location.reload();
@@ -540,12 +612,14 @@ export default {
       if (this.inputAuthor == "") {
         this.$alert("不合法的作者名！", "错误", {
           confirmButtonText: "确定",
-          callback: (action) => {},
+          callback: (action) => {
+          },
         });
       } else if (this.currentAuthors.indexOf(this.inputAuthor) != -1) {
         this.$alert(`${this.inputAuthor}已存在！`, "错误", {
           confirmButtonText: "确定",
-          callback: (action) => {},
+          callback: (action) => {
+          },
         });
       } else {
         this.currentAuthors.push(this.inputAuthor);
@@ -577,38 +651,39 @@ export default {
         }
       });
     },
-    closeEditDialog() {
-      this.newArticleRecord = {};
-      this.currentAuthors = [];
-      this.inputAuthor = "";
-      this.$refs.articleAddForm.resetFields();
-      this.editShow = false;
-    },
-    page(currentPage) {
-      const _this = this;
-      axios
-        .get(`http://localhost:${this.port}/admin/find`)
-        .then(function (resp) {
-          console.log(resp);
-          console.log(resp.data.content.length);
-          _this.tableData = resp.data.content.slice(
-            (currentPage - 1) * _this.pageEachSize,
-            currentPage * _this.pageEachSize
-          );
-          console.log(_this.tableData[1].publishYear);
-          _this.pageNum = Math.ceil(
-            resp.data.content.length / _this.pageEachSize
-          );
-          console.log(_this.pageNum);
-          _this.total = resp.data.content.length;
-          for (let i in _this.tableData) {
-            this.tableData[i].publishYear = this.tableData[
-              i
-            ].publishYear.toString();
-            // console.log(_this.tableData[i].publishYear);
-          }
-        });
-    },
+    // ,
+    // closeEditDialog() {
+    //   this.newArticleRecord = {};
+    //   this.currentAuthors = [];
+    //   this.inputAuthor = "";
+    //   this.$refs.articleAddForm.resetFields();
+    //   this.editShow = false;
+    // }
+    // page(currentPage) {
+    //   const _this = this;
+    //   axios
+    //     .get(`http://localhost:${this.port}/admin/find`)
+    //     .then(function (resp) {
+    //       console.log(resp);
+    //       console.log(resp.data.content.length);
+    //       _this.tableData = resp.data.content.slice(
+    //         (currentPage - 1) * _this.pageEachSize,
+    //         currentPage * _this.pageEachSize
+    //       );
+    //
+    //       _this.pageNum = Math.ceil(
+    //         resp.data.content.length / _this.pageEachSize
+    //       );
+    //       console.log(_this.pageNum);
+    //       _this.total = resp.data.content.length;
+    //       for (let i in _this.tableData) {
+    //         this.tableData[i].publishYear = this.tableData[
+    //           i
+    //           ].publishYear.toString();
+    //         // console.log(_this.tableData[i].publishYear);
+    //       }
+    //     });
+    // },
     handleSpanClickDebug() {
       console.log(this.formRules);
     },
@@ -624,31 +699,42 @@ export default {
     //         }
     //       }, 200);
     //     },
-
-    page(currentPage) {
+    page(currentPage, data = null) {
+      this.currentPage = currentPage;
+      //避免再次请求，直接取缓存
+      this.tableData = this.tableDataAll;
+      this.pageEachSize = 10;
+      // if(data==null) data = this.tableDataAll;
+      // this.tableData = data.slice(
+      //   (currentPage - 1) * this.pageEachSize,
+      //   currentPage * this.pageEachSize
+      // );
+      // console.log(this.tableData[1].publishYear);
+      // this.pageNum = Math.ceil(
+      //   data.length / this.pageEachSize
+      // );
+      // console.log(this.pageNum);
+      // console.log(this.tableData)
+      // this.total = data.length;
+      // this.tableData.map((el) => {
+      //   console.log(el)
+      //   el.publishYear.toString()
+      // })
+      // for (let i in this.tableData) {
+      //   this.tableData[i].publishYear = this.tableData[i].publishYear.toString();
+      // }
+    },
+    //请求并分页
+    getTableData(url = null) {
       const _this = this;
-      axios
-        .get(`http://localhost:${this.port}/admin/find`)
-        .then(function (resp) {
-          console.log(resp);
-          console.log(resp.data.content.length);
-          _this.tableData = resp.data.content.slice(
-            (currentPage - 1) * _this.pageEachSize,
-            currentPage * _this.pageEachSize
-          );
-          console.log(_this.tableData[1].publishYear);
-          _this.pageNum = Math.ceil(
-            resp.data.content.length / _this.pageEachSize
-          );
-          console.log(_this.pageNum);
-          _this.total = resp.data.content.length;
-          for (let i in _this.tableData) {
-            this.tableData[i].publishYear = this.tableData[
-              i
-            ].publishYear.toString();
-            // console.log(_this.tableData[i].publishYear);
-          }
-        });
+      if (!url) url = `http://localhost:${this.port}/admin/find`;
+      return axios.get(url).then(function (resp) {
+        console.log(resp);
+        console.log(resp.data.content.length);
+        _this.tableDataAll = resp.data.content;
+        console.log(_this.tableDataAll);
+        _this.page(_this.currentPage);
+      });
     },
     filterHeadDataToForm() {
       return this.tableHeadData.filter((item) => !item.autoAdd);
@@ -746,7 +832,6 @@ export default {
         ? element.addEventListener(type, listener, useCapture)
         : element.attachEvent("on" + type, listener);
     },
-
     closeEditDialog() {
       this.newArticleRecord = {};
       this.currentAuthors = [];
@@ -754,19 +839,21 @@ export default {
       this.$refs.articleAddForm.resetFields();
       this.editShow = false;
     },
-
+    refresh() {
+      this.page(this.currentPage);
+    },
+    // 下载excel
     downloadExcel() {
-      this.$ajax({
-        method: "post",
-        url: "admin/downloadExcel",
-        responseType: "blob",
-        data: this.filtedData,
-      })
+      let baseURL = "http://localhost:8080"
+      let _this = this;
+      // console.log(JSON.stringify(this.filtedData))
+      axios.post(`${baseURL}/admin/downloadExcel`, _this.filtedData)
         .then((res) => {
           var blob = new Blob([res.data], {
             type:
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8",
+              "application/vnd.ms-excel;charset=utf-8",
           });
+          console.log(res.data[0])
           var downloadElement = document.createElement("a");
           var href = window.URL.createObjectURL(blob); //创建下载的链接
           downloadElement.href = href;
@@ -783,37 +870,101 @@ export default {
           })
         );
     },
+// 上传
+    uploadExcelURL() {
+      // console.log(this.$ajax.defaults.baseURL)
+      let baseURL = "http://localhost:8080";
+      return `${baseURL}/admin/uploadExcel`;
+    }
+    ,
+    uploadTxtURL() {
+      let baseURL = "http://localhost:8080";
+      return `${baseURL}/admin/uploadTxt`;
+    }
+    ,
+    uploadExcelNow() {
+      this.$refs.uploadexcel.submit();
+    }
+    ,
+    uploadTxtNow() {
+      this.$refs.uploadtxt.submit();
+    }
+    ,
     uploadSuccess(res) {
-      this.$notify({
-        type: "success",
-        message: res,
-      });
-      this.update();
+      console.log(res.status);
+      if (res.status != 200) {
+        this.$notify.error({
+          title: `${res.successNum}个上传成功，${
+            res.totalNum - res.sucessNum
+          }上传失败，引用格式不正确或引用条目已存在！`,
+        });
+      } else
+        this.$notify.success({
+          title: `${res.successNum}个上传成功！`,
+        });
+      this.refresh();
       this.uploadShow = false;
-    },
+    }
+    ,
+    searchArticle() {
+      let baseURL = "http://localhost:8080";
+      let _this = this;
+      this.getTableData(
+        `${baseURL}/admin/find?id=${this.filterId}&author=${this.filterAuthor}&articleType=${this.articleType}&articleName=${this.filterName}&publishYear=${this.filterYear_start}`
+      );
+      this.page(this.currentPage);
+    }
+    ,
   },
+
   computed: {
     filtedData() {
-      return this.tableData
+      let ansFilter = this.tableDataAll
         .filter((item) => {
           var reg = new RegExp(this.searchStr, "i");
           return (
             !this.searchStr ||
-            reg.test(item.name) ||
-            reg.test(item.author.join(" "))
+            reg.test(item.articleName) ||
+            reg.test(item.author.join(",")) ||
+            reg.test(item.author.join(" ")) ||
+            reg.test(item.articleName) ||
+            reg.test(item.articleType)
           );
         })
         .filter((item) => {
-          return this.filterType === "" || item.status === this.filterType;
+          return this.filterType == "" || item.articleType == this.filterType;
+        })
+        .filter((item) => {
+          var reg = new RegExp(this.filterName, "i");
+          return this.filterName == "" || reg.test(item.articleName);
+        })
+        .filter((item) => {
+          console.log(
+            this.filterYear_start,
+            new Date(item.publishYear),
+            this.filterYear_end == new Date(item.publishYear)
+          );
+          return (
+            (this.filterYear_start == 0 ||
+              this.filterYear_start.getFullYear() <=
+              new Date(item.publishYear).getFullYear()) &&
+            (this.filterYear_end == 0 ||
+              this.filterYear_end.getFullYear() >=
+              new Date(item.publishYear).getFullYear())
+          );
         })
         .filter((item) => {
           return (
-            !this.filterDates ||
-            (this.filterDates[0] <= new Date(item.completeDate) &&
-              this.filterDates[1] >= new Date(item.completeDate))
+            this.filterAuthor == "" ||
+            item.author.indexOf(this.filterAuthor) != -1
           );
         });
-    },
+      // 计算属性会在mounted之前加载！！！
+      console.log(this.tableDataAll);
+      if (this.tableDataAll.length > 0) this.page(1);
+      return ansFilter;
+    }
+    ,
     sortedData() {
       if (
         !this.sortOrder ||
@@ -848,19 +999,21 @@ export default {
             });
           }
       }
-    },
+    }
+    ,
     total() {
       return this.filtedData.length;
-    },
+    }
+    ,
     pagedData() {
       return this.sortedData.slice(
         (this.currentPage - 1) * this.currentPageSize,
         this.currentPage * this.currentPageSize
       );
-    },
-    uploadUrl() {
-      return `${this.$ajax.defaults.baseURL}admin/uploadExcel`;
-    },
-  },
-};
+    }
+    ,
+  }
+  ,
+}
+;
 </script>
