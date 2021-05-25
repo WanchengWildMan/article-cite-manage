@@ -1,9 +1,8 @@
 <template>
   <el-container>
     <!-- 头部区域 -->
-    <el-header class="head" height="100px">
-      <h2>Vue小模块</h2>
-      <h4>论 文 引 用 管 理 系 统</h4>
+    <el-header class="head" height="100px" align="center">
+      <h2>论 文 引 用 管 理 系 统</h2>
     </el-header>
     <!-- 主区域 -->
     <el-main>

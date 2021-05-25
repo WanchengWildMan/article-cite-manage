@@ -1,5 +1,7 @@
 package com.management.article.control;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.management.article.dao.ArticleDAO;
 import com.management.article.dataobject.ArticleDO;
 import com.management.article.utils.ArticleDOFactory;
@@ -13,11 +15,18 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
+import  com.alibaba.excel.*;
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.http.HttpResponse;
 import java.sql.ResultSet;
@@ -273,15 +282,15 @@ public class ArticleControl {
         return resultMap;
     }
 
-    @PostMapping("/downloadExcel")
-    @ResponseBody
-    public Map downloadExcel(@RequestBody List<ArticleDO> articleDOList) {
+    @PostMapping(value = "/downloadExcel")//, produces = "application/vnd.ms-excel;charset=utf-8")
+    public ResponseEntity<byte[]> downloadExcel(@RequestBody List<ArticleDO> articleDOList,HttpServletResponse response)throws IOException {
         //文档对象
         Map resultMap = new HashMap();
         for (ArticleDO articleDO : articleDOList)
             System.out.println(articleDO.getArticleName());
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
-        resultMap.put("status", 200);HSSFWorkbook wb = new HSSFWorkbook();
+        resultMap.put("status", 200);
+        XSSFWorkbook wb = new XSSFWorkbook();
         int rowNum = 0;
         Sheet sheet = wb.createSheet("excel的标题");
         Row row0 = sheet.createRow(rowNum++);
@@ -312,7 +321,15 @@ public class ArticleControl {
             }
         }
         if (rowNum - 1 == 0) resultMap.put("status", 400);
-//        resultMap.put("content", wb);
-        return resultMap;
+        resultMap.put("content", wb);
+        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+        wb.write(outputStream);
+        outputStream.close();
+        String fileName = new String("导出列表.xlsx".getBytes("UTF-8"), "iso-8859-1");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentDispositionFormData("attachment", fileName);
+        httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        ResponseEntity<byte[]> filebyte = new ResponseEntity<byte[]>(outputStream.toByteArray(), httpHeaders, HttpStatus.CREATED);
+        return filebyte;
     }
 }

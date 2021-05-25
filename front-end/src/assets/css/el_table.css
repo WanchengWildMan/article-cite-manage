@@ -6,6 +6,12 @@ template {
   overflow: scroll;
   text-overflow: unset;
 }
+/deep/ .el-main .el-container .el-header{
+ }
+div.el-col.el-col-12 {
+  overflow: hidden;
+
+}
 
 .el-table,
 .el-table--border {

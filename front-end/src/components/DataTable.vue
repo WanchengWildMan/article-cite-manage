@@ -16,15 +16,17 @@
         v-model="searchStr"
         suffix-icon="el-icon-search"
         placeholder="请输入搜索内容"
+        style="min-width: 50px"
       ></el-input>
     </template>
     <!-- 过滤条件区 -->
-    <template slot="filter-field">
+    <template slot="filter-field" style="display: flex;">
       <el-input-number
         v-model="filterId"
-        min="1"
-        step="1"
-        placeholder="搜索文献编号"
+        :min="0"
+        :step="1"
+        placeholder="文献编号"
+        style="min-width: 50px;max-width: 150px;"
       ></el-input-number>
       <!--      文献题目过滤框-->
       <el-input
@@ -32,10 +34,14 @@
         v-model="filterName"
         suffix-icon="el-icon-search"
         placeholder="搜索文献题目"
-        style="width: 150px"
+        style="min-width: 50px;max-width: 150px;"
+        @input="change($event)"
       ></el-input>
       <!-- 文献类型过滤框 -->
-      <el-select v-model="filterType" placeholder="选择类型">
+      <el-select v-model="filterType"
+                 placeholder="选择类型"
+                 style="min-width: 50px;max-width: 150px;"
+      >
         <el-option label="全部" value=""></el-option>
         <el-option
           v-for="type in articleTypes"
@@ -48,8 +54,8 @@
       <el-input
         v-model="filterAuthor"
         suffix-icon="el-icon-search"
-        placeholder="搜索作者"
-        style="width: 150px"
+        placeholder="文献作者"
+        style="min-width: 50px;max-width: 150px;"
       ></el-input>
       <!-- 出版时间过滤框 -->
       <el-date-picker
@@ -57,12 +63,15 @@
         type="year"
         format="yyyy"
         placeholder="起始年份"
+        style="min-width: 50px;max-width: 150px;"
       ></el-date-picker>
 
       <el-date-picker
         v-model="filterYear_end"
         type="year"
         placeholder="结束年份"
+        style="min-width: 50px;max-width: 150px;"
+
       ></el-date-picker>
       <el-button
         type="primary"
@@ -87,7 +96,8 @@
       </el-button>
     </template>
     <!-- 表格区 -->
-    <el-table :data="filtedData" border id="articleTable" ref="articleTable">
+    <el-table :data="filtedData.slice((currentPage - 1) * pageEachSize, currentPage * pageEachSize)"
+              border id="articleTable" ref="articleTable">
       <el-table-column
         v-for="item of tableHeadData"
         :key="item.key"
@@ -175,15 +185,17 @@
     </el-table>
     <el-pagination
       background
-      layout="prev, pager, next"
+      layout="prev, pager, next, sizes, total, jumper"
+      :page-sizes="[5,10,15,20]"
       :page-size="pageEachSize"
       :total="total"
       :current-page="currentPage"
       @current-change="page"
-      @size-change="pageSizeChange"
+
+      @size-change="handleSizeChange"
     >
     </el-pagination>
-    <!-- 对话框 -->
+    <!-- 添加文献对话框 -->
     <edit-dialog
       :show="editShow"
       title="新建文献条目"
@@ -260,8 +272,9 @@
       </el-form>
     </edit-dialog>
     <!-- 上传文件对话框 -->
-    <el-dialog title="上传文件" :visible.sync="uploadShow">
+    <el-dialog title="从文件中导入" :visible.sync="uploadShow">
       <el-upload
+        title="Excel"
         ref="uploadexcel"
         accept=".xlsx"
         :action="uploadExcelURL()"
@@ -274,6 +287,7 @@
         </el-button>
       </el-upload>
       <el-upload
+        title="txt文本"
         ref="uploadtxt"
         accept=".txt"
         :action="uploadTxtURL()"
@@ -310,9 +324,8 @@ export default {
   data() {
     return {
       port: 8080,
-      pageEachSize: 10,
+      pageEachSize: 20,
       pageNum: 1, //no use
-      total: 10,
       displayLogic: ["none", "block"],
       articleTypes: [
         {value: "J", label: "[J]期刊"},
@@ -321,6 +334,7 @@ export default {
         {value: "D", label: "[D]学位文献"},
         {value: "R", label: "[R]报告"},
         {value: "S", label: "[S]标准"},
+        {value: "N", label: "[N]报纸"},
         {value: "P", label: "[P]专利"},
         {value: "DB/CD", label: "[DB/CD]数据库（CD）"},
         {value: "DB/OL", label: "[DB/CD]数据库（在线）"},
@@ -331,16 +345,19 @@ export default {
         articleName: [
           {required: true, message: "请填写文献题目", trigger: "blur"},
         ],
-        // author: [{ required: true, message: "请输入作者", trigger: "blur" }],
+        author: [{required: false, message: "请输入作者", trigger: "blur"}],
         publishYear: [
           {
             required: true,
             message: "请选择日期",
             trigger: "change",
-          },
+          }
         ],
-        num: [{required: true, message: "请填写卷号(期号)", trigger: "blur"}],
-
+        // num: [{required: true, message: "请填写卷号(期号)", trigger: "blur"}],
+        publishHouse: [{required: true, message: "请输入出版机构"}],
+        articleType: [{required: true, message: "请选择文献类型"}],
+        startPage: [{required: true, message: "请输入起始页码或刊登月份"}],
+        endPage: [{required: true, message: "请输入结束页码或刊登日"}],
         seqId: [{required: true, message: "请输入文献的引用次序"}],
       },
       articleModel: {
@@ -414,17 +431,18 @@ export default {
           name: "num",
           label: "卷号(期号)",
           isNumber: true,
+          notRequired: true,
           minNumber: 1,
         },
         {
           name: "startPage",
-          label: "起始页码",
+          label: "起始页码或刊登月份",
           isNumber: true,
           minNumber: 1,
         },
         {
           name: "endPage",
-          label: "结束页码",
+          label: "结束页码或刊登日",
           isNumber: true,
           minNumber: 1,
         },
@@ -465,8 +483,8 @@ export default {
       ],
       tableDataAll: [],
       data: [],
-      searchStr: null,
-      filterId: 0,
+      searchStr: "",
+      filterId: undefined,
       filterAuthor: "",
       filterName: "",
       filterType: "",
@@ -484,25 +502,26 @@ export default {
     };
   },
   created() {
-    setTimeout(() => {
-      this.getTableData();
-      // this.page(1)
-    }, 300);
+    console.log("CREATED")
   },
   mounted() {
-    console.log(this.tableHeadData);
-
-    this.$nextTick(() => {
-      // 表格添加列宽变化
-      this.tableResizeInit();
-      // console.log(this.tableHeadData)
-    });
+    console.log("MOUNTED")
+    const self = this
+    this.getTableData().then(() => {
+      console.log(self.tableHeadData);
+      console.log(self.tableDataAll)
+      console.log(self.filtedData)
+      // this.page(1, self.filtedData)
+      this.$nextTick(() => {
+        // 表格添加列宽变化
+        this.tableResizeInit();
+      });
+    })
     // console.log(this.tableData);
-    setTimeout(() => {
-      this.getTableData();
-      // this.page(1)
-    }, 300);
-    // this.page(1);
+    // setTimeout(() => {
+    //   this.getTableData();
+    //   // this.page(1)
+    // }, 300);
     for (let i in this.tableHeadData) {
       this.tableHeadData[i]["modelName"] =
         "tableHeadData." + this.tableHeadData[i].name;
@@ -659,31 +678,6 @@ export default {
     //   this.$refs.articleAddForm.resetFields();
     //   this.editShow = false;
     // }
-    // page(currentPage) {
-    //   const _this = this;
-    //   axios
-    //     .get(`http://localhost:${this.port}/admin/find`)
-    //     .then(function (resp) {
-    //       console.log(resp);
-    //       console.log(resp.data.content.length);
-    //       _this.tableData = resp.data.content.slice(
-    //         (currentPage - 1) * _this.pageEachSize,
-    //         currentPage * _this.pageEachSize
-    //       );
-    //
-    //       _this.pageNum = Math.ceil(
-    //         resp.data.content.length / _this.pageEachSize
-    //       );
-    //       console.log(_this.pageNum);
-    //       _this.total = resp.data.content.length;
-    //       for (let i in _this.tableData) {
-    //         this.tableData[i].publishYear = this.tableData[
-    //           i
-    //           ].publishYear.toString();
-    //         // console.log(_this.tableData[i].publishYear);
-    //       }
-    //     });
-    // },
     handleSpanClickDebug() {
       console.log(this.formRules);
     },
@@ -699,11 +693,11 @@ export default {
     //         }
     //       }, 200);
     //     },
-    page(currentPage, data = null) {
+    page(currentPage) {
       this.currentPage = currentPage;
       //避免再次请求，直接取缓存
-      this.tableData = this.tableDataAll;
-      this.pageEachSize = 10;
+      // this.tableData = this.tableDataAll;
+      // this.tableData = this.filtedData;
       // if(data==null) data = this.tableDataAll;
       // this.tableData = data.slice(
       //   (currentPage - 1) * this.pageEachSize,
@@ -724,16 +718,19 @@ export default {
       //   this.tableData[i].publishYear = this.tableData[i].publishYear.toString();
       // }
     },
-    //请求并分页
+    handleSizeChange(psize) {
+      this.pageEachSize = psize;
+    },
+    //请求数据不分页
     getTableData(url = null) {
       const _this = this;
+      console.log(url)
       if (!url) url = `http://localhost:${this.port}/admin/find`;
       return axios.get(url).then(function (resp) {
         console.log(resp);
         console.log(resp.data.content.length);
         _this.tableDataAll = resp.data.content;
         console.log(_this.tableDataAll);
-        _this.page(_this.currentPage);
       });
     },
     filterHeadDataToForm() {
@@ -847,13 +844,15 @@ export default {
       let baseURL = "http://localhost:8080"
       let _this = this;
       // console.log(JSON.stringify(this.filtedData))
-      axios.post(`${baseURL}/admin/downloadExcel`, _this.filtedData)
+      axios.post(`${baseURL}/admin/downloadExcel`, _this.filtedData, {
+        responseType: "blob"
+      })
         .then((res) => {
           var blob = new Blob([res.data], {
             type:
-              "application/vnd.ms-excel;charset=utf-8",
+              "application/vnd.ms-excel",
           });
-          console.log(res.data[0])
+          console.log(res.data)
           var downloadElement = document.createElement("a");
           var href = window.URL.createObjectURL(blob); //创建下载的链接
           downloadElement.href = href;
@@ -910,11 +909,12 @@ export default {
       let baseURL = "http://localhost:8080";
       let _this = this;
       this.getTableData(
-        `${baseURL}/admin/find?id=${this.filterId}&author=${this.filterAuthor}&articleType=${this.articleType}&articleName=${this.filterName}&publishYear=${this.filterYear_start}`
+        `${baseURL}/admin/find?id=${!this.filterId ? 0 : this.filterId}&author=${this.filterAuthor}&articleType=${this.articleType}&articleName=${this.filterName}&publishYear=${this.filterYear_start.getFullYear()}`
       );
-      this.page(this.currentPage);
     }
-    ,
+    , change(e) {
+      this.$forceUpdate()
+    },
   },
 
   computed: {
@@ -922,14 +922,17 @@ export default {
       let ansFilter = this.tableDataAll
         .filter((item) => {
           var reg = new RegExp(this.searchStr, "i");
+          console.log(item)
           return (
             !this.searchStr ||
             reg.test(item.articleName) ||
-            reg.test(item.author.join(",")) ||
-            reg.test(item.author.join(" ")) ||
-            reg.test(item.articleName) ||
+            reg.test(item.author) ||//.join(",")) ||
+            // reg.test(item.author.join(" ")) ||
             reg.test(item.articleType)
           );
+        })
+        .filter((item) => {
+          return this.filterId == 0 || !this.filterId || item.id == this.filterId;
         })
         .filter((item) => {
           return this.filterType == "" || item.articleType == this.filterType;
@@ -939,16 +942,16 @@ export default {
           return this.filterName == "" || reg.test(item.articleName);
         })
         .filter((item) => {
-          console.log(
-            this.filterYear_start,
-            new Date(item.publishYear),
-            this.filterYear_end == new Date(item.publishYear)
-          );
+          // console.log(
+          //   this.filterYear_start,
+          //   new Date(item.publishYear),
+          //   this.filterYear_end == new Date(item.publishYear)
+          // );
           return (
-            (this.filterYear_start == 0 ||
+            (!this.filterYear_start || this.filterYear_start == 0 ||
               this.filterYear_start.getFullYear() <=
               new Date(item.publishYear).getFullYear()) &&
-            (this.filterYear_end == 0 ||
+            (!this.filterYear_end || this.filterYear_end == 0 ||
               this.filterYear_end.getFullYear() >=
               new Date(item.publishYear).getFullYear())
           );
@@ -960,7 +963,7 @@ export default {
           );
         });
       // 计算属性会在mounted之前加载！！！
-      console.log(this.tableDataAll);
+      // console.log(this.tableDataAll);
       if (this.tableDataAll.length > 0) this.page(1);
       return ansFilter;
     }
