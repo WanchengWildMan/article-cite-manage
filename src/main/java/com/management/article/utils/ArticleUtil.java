@@ -6,6 +6,8 @@ import org.apache.poi.hpsf.IllegalPropertySetDataException;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.*;
 
+import java.math.MathContext;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.text.SimpleDateFormat;
@@ -55,22 +57,40 @@ public class ArticleUtil {
     }
 
     public static ArticleDO parseArticleFromString(String s) throws Exception {
-        String pat = "\\[(\\d*)\\]\\s*([^。.]*)[.｜。]\\s*([^\\[\\s]*)\\s*\\[([A-Z]*)\\]\\s*.\\s*([^,，]*)[,|，]\\s*(\\d{4})[\\(|（]?(\\d*)[\\)|）]?[\\:|：](\\d*)[\\-]*(\\d*)\\.";
+        String pat_seqId = "\\[(\\d*)\\]";
+        String pat = "\\[(\\d*)\\]\\s*([^。.]*)[.｜。]\\s*([^\\[\\s]*)\\s*\\[([^\\]]*)\\]\\s*.\\s*([^,，]*)[,|，]\\s*(\\d{4})[\\(|（]?(\\d*)[\\)|）]?[\\:|：|,|，|\\D]*(\\d*)[\\-]*(\\d*)\\.*";
+        String pat_eng = "\\[(\\d*)\\]\\s*([[\\w*|,|\\s]|[\\.]*(?=[\\S])&*]*)\\.\\s*([[^\\[]*\\s*]*)\\[([^\\]]*)\\]\\s*\\.\\s*([^\\d|,]*),(\\d{4})[\\(|（]?(\\d*)[\\)|）]?\\.?[\\:|：|,|，|\\D]*(\\d*)[\\-]*(\\d*)\\.*";
+
         Pattern rpat = Pattern.compile(pat);
-        Matcher matcher = rpat.matcher(s);
+        Pattern rpat_eng = Pattern.compile(pat_eng);
+        Matcher mat = rpat.matcher(s);
+
+        Matcher matcher_eng = rpat_eng.matcher(s.toString());
         ArticleDO articleDO = new ArticleDO();
         List<Map> props = ClassFieldUtil.getFieldsInfo(new ArticleDO());
         Map map = new HashMap<>();
-
-        if (matcher.find()) {
+        boolean ok=mat.find();
+        if (!ok) {
+            mat = matcher_eng;
+            ok=matcher_eng.find();
+        }
+        if (ok) {
             //不同类型要分别判断！！
-            for (int i = 1; i <= matcher.groupCount(); i++) {
+            for (int i = 1; i <= mat.groupCount(); i++) {
                 String propName = props.get(i).get("name").toString();
                 String propType = props.get(i).get("type").toString().toLowerCase();
-                String content = matcher.group(i);
+                String content = mat.group(i);
+                System.out.println(content);
                 if (content == "") content = "0";
                 if (propType.contains("short")) {
-                    int x = Integer.parseInt(content);
+                    int x = 0;
+//                    try {
+                    x = Integer.parseInt(content);
+//                    } catch (Exception e) {
+//                        if (content.indexOf("-") != -1) {
+//                            x = Integer.parseInt(content.split("-")[0]);
+//                        }
+//                    }
                     map.put(propName, (short) x);
                 } else if (propType.contains("int") || propType.contains("long")) {
                     map.put(propName, Integer.parseInt((content)));
@@ -79,15 +99,17 @@ public class ArticleUtil {
                 }
 
             }
-        }
-        if (map.get(END_PAGE).equals(0)) {
-            map.put(END_PAGE, map.get(START_PAGE));
-        }
-        if (map.get(JOURNAL_NUMBER_OR_PAPER_NUMBER).equals(0)) {
-            map.put(JOURNAL_NUMBER_OR_PAPER_NUMBER, 0);
-        }
-        return ArticleDOFactory.getArticleDO(map);
+            if (map.get(END_PAGE).equals(0)) {
+                map.put(END_PAGE, map.get(START_PAGE));
+            }
+            if (map.get(JOURNAL_NUMBER_OR_PAPER_NUMBER).equals(0)) {
+                map.put(JOURNAL_NUMBER_OR_PAPER_NUMBER, 0);
+            }
+            return ArticleDOFactory.getArticleDO(map);
 
+        }
+
+        return null;
     }
 
     public static List<ArticleDO> parseArticlesFromExcel(XSSFWorkbook xssfWorkbook) throws Exception {
@@ -101,7 +123,6 @@ public class ArticleUtil {
             int minColIx = xssfRow.getFirstCellNum();
             int maxColIx = xssfRow.getLastCellNum();
             Map rowMap = new HashMap();
-
             for (int colIx = minColIx; colIx < maxColIx; colIx++) {
                 int j = (colIx - minColIx);
                 XSSFCell cell = xssfRow.getCell(colIx);

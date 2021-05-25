@@ -25,7 +25,7 @@ public class ArticleDO {
      */
     private String author;
     /**
-     * 文献篇名
+     * 文献题目
      */
     private String articleName;
     /**
@@ -47,11 +47,11 @@ public class ArticleDO {
      */
     private short num;
     /**
-     * 起页码
+     * 起始页码或出版月
      */
     private short startPage;
     /**
-     * 止页码
+     * 结束页码或出版日
      */
     private short endPage;
     /**
