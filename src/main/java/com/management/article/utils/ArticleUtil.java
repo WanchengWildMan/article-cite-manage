@@ -1,23 +1,21 @@
 package com.management.article.utils;
 
 import com.management.article.dataobject.ArticleDO;
-
-import org.apache.poi.hpsf.IllegalPropertySetDataException;
 import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.math.MathContext;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ArticleUtil {
     // TODO:正则表达式从标准格式获取
@@ -34,8 +32,11 @@ public class ArticleUtil {
     public static final String ARTICLE_TYPE = "articleType";
     public static final String PUBLISH_HOUSE = "publishHouse";
     public static final String PUBLISH_Year = "publishYear";
+    //卷号（期号）
     public static final String JOURNAL_NUMBER_OR_PAPER_NUMBER = "num";
+    //起始页码
     public static final String START_PAGE = "startPage";
+    //结束页码
     public static final String END_PAGE = "endPage";
 
     public static final SimpleDateFormat LOG_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -84,13 +85,7 @@ public class ArticleUtil {
                 if (content == "") content = "0";
                 if (propType.contains("short")) {
                     int x = 0;
-//                    try {
                     x = Integer.parseInt(content);
-//                    } catch (Exception e) {
-//                        if (content.indexOf("-") != -1) {
-//                            x = Integer.parseInt(content.split("-")[0]);
-//                        }
-//                    }
                     map.put(propName, (short) x);
                 } else if (propType.contains("int") || propType.contains("long")) {
                     map.put(propName, Integer.parseInt((content)));

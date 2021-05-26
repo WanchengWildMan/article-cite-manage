@@ -12,5 +12,5 @@ Vue.use(Element)
 
 Vue.component('chart', Echarts)
 //baseURL here
-axios.defaults.baseURL = 'http://localhost:3000/'
+axios.defaults.baseURL = 'http://localhost:8080/'
 Vue.prototype.$ajax = axios

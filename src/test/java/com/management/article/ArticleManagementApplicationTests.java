@@ -1,24 +1,22 @@
 package com.management.article;
 
-import ch.qos.logback.core.joran.action.ActionUtil;
 import com.management.article.control.ArticleControl;
 import com.management.article.dao.ArticleDAO;
 import com.management.article.dataobject.ArticleDO;
 import com.management.article.utils.ArticleUtil;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.xmlgraphics.util.ClasspathResource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -87,7 +85,7 @@ class ArticleManagementApplicationTests {
 
     @Test
     void testParseArticleFromString() {
-//        String s = "[2] 葛家澍，林志军.现代西方财务会计理论[M].厦门：厦门大学出版社，2001：42.";
+        String s = "[2] 葛家澍，林志军.现代西方财务会计理论[M].厦门：厦门大学出版社，2001：42.";
 //        [1]刘国钧，陈绍业，王凤翥. 图书馆目录[M]. 北京：高等教育出版社，1957.15-18.
         try {
             FileInputStream txtStream = new FileInputStream(new ClassPathResource("参考文献.txt").getFile());

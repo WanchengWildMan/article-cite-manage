@@ -111,8 +111,9 @@
         <template slot-scope="scope">
           <span v-if="item.name == 'index'">{{ scope.$index + 1 }}</span>
           <template v-else>
+<!--            不可修改或不在编辑状态展示表格本身-->
             <span v-show="item.unModifiable || !scope.row.show">{{
-                scope.row[item.name]
+                scope.row[item.name]==0?"":scope.row[item.name]
               }}</span>
             <el-form :rules="formRules">
               <el-form-item v-show="!scope.row.unModifiable && scope.row.show">
@@ -273,12 +274,13 @@
     </edit-dialog>
     <!-- 上传文件对话框 -->
     <el-dialog title="从文件中导入" :visible.sync="uploadShow">
+      <h4>从Excel中导入</h4>
       <el-upload
         title="Excel"
         ref="uploadexcel"
         accept=".xlsx"
         :action="uploadExcelURL()"
-        list-type="picture-card"
+        list-type="text"
         :on-success="uploadSuccess"
         :file-list="currentAddFileList"
       >
@@ -286,12 +288,14 @@
         >立即上传
         </el-button>
       </el-upload>
+      <h4>从txt文本中导入</h4>
+
       <el-upload
         title="txt文本"
         ref="uploadtxt"
         accept=".txt"
         :action="uploadTxtURL()"
-        list-type="picture-card"
+        list-type="text"
         :on-success="uploadSuccess"
         :file-list="currentAddFileList"
       >
@@ -461,26 +465,7 @@ export default {
           autoAdd: true,
         },
       ],
-      tableData: [
-        {
-          id: 1,
-          seqId: 2,
-          articleName: "解忧杂货店",
-          author: "东野圭吾",
-        },
-        {
-          id: 2,
-          articleName: "追风筝的人",
-          publishYear: "2004",
-          author: "卡勒德·胡赛尼",
-        },
-        {
-          id: 3,
-          publishYear: "2004",
-          articleName: "人间失格",
-          author: "太宰治",
-        },
-      ],
+
       tableDataAll: [],
       data: [],
       searchStr: "",
@@ -517,11 +502,7 @@ export default {
         this.tableResizeInit();
       });
     })
-    // console.log(this.tableData);
-    // setTimeout(() => {
-    //   this.getTableData();
-    //   // this.page(1)
-    // }, 300);
+
     for (let i in this.tableHeadData) {
       this.tableHeadData[i]["modelName"] =
         "tableHeadData." + this.tableHeadData[i].name;
@@ -577,10 +558,10 @@ export default {
         type: "warning",
       })
         .then(() => {
-          _this.tableData.splice(index, 1);
+          _this.tableDataAll.splice(index, 1);
           axios
             .delete(
-              `http://localhost:${this.port}/admin/deleteOneById?id=` + row.id
+              `/admin/deleteOneById?id=` + row.id
             )
             .then(function (resp) {
               // console.log(_this)
@@ -837,7 +818,7 @@ export default {
       this.editShow = false;
     },
     refresh() {
-      this.page(this.currentPage);
+      window.location.reload()
     },
     // 下载excel
     downloadExcel() {
@@ -890,18 +871,17 @@ export default {
     }
     ,
     uploadSuccess(res) {
-      console.log(res.status);
       if (res.status != 200) {
         this.$notify.error({
-          title: `${res.successNum}个上传成功，${
-            res.totalNum - res.sucessNum
-          }上传失败，引用格式不正确或引用条目已存在！`,
+          title: `${res.successNum}个导入成功，${
+            res.totalNum - res.successNum
+          }个导入失败，引用格式不正确或引用条目已存在！`,
         });
       } else
         this.$notify.success({
-          title: `${res.successNum}个上传成功！`,
+          title: `${res.successNum}个导入成功！`,
         });
-      this.refresh();
+      // this.refresh();
       this.uploadShow = false;
     }
     ,

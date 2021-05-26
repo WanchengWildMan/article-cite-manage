@@ -1,17 +1,11 @@
 package com.management.article.dataobject;
 
-import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.type.Alias;
 
 import java.time.LocalDateTime;
 
-@Mapper
 @Alias("articleDO")
 public class ArticleDO {
-    //基本信息：文献编号、文献作者、文献篇名、文献类型（M：专著、C：论文集、N：报纸文章、J：期刊文章、D：学位论文、R：报告）、出版机构、出版时间、卷号（期号），
-    //[1] 夏鲁惠.高等学校毕业论文教学情况调研报告[J].高等理科教育，2004(1):46-52.
-    //[2] 葛家澍，林志军.现代西方财务会计理论[M].厦门：厦门大学出版社，2001：42.
-    //https://wenku.baidu.com/view/978dff906bd97f192379e915.html
     /**
      * 文献编号
      */
@@ -36,8 +30,6 @@ public class ArticleDO {
      * 出版机构
      */
     private String publishHouse;
-
-
     /**
      * 出版时间
      */
@@ -48,10 +40,12 @@ public class ArticleDO {
     private short num;
     /**
      * 起始页码或出版月
+     * ！！！如果是报纸则为出版月，因为报纸必须写出版月日，但不用写页码，默认或空则为0
      */
     private short startPage;
     /**
      * 结束页码或出版日
+     * ！！！如果是报纸则为出版日
      */
     private short endPage;
     /**
