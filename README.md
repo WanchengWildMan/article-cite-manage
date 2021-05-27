@@ -19,4 +19,5 @@ __: 参数类型Id/Object
 - Object：请求体body中的json
 - Id：请求参数query中的值
 ### Excel与txt的上传与Excel的导出
-- txt的导入：从标准引用字符串中解析
+- txt的导入：从标准引用字格式中解析 分中英文
+- Excel的导入：
