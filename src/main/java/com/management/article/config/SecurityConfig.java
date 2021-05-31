@@ -10,14 +10,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(WebSecurity web) throws Exception {
         this.getHttp().csrf().disable();
-        web.ignoring().antMatchers("/login", "index.html","/static/**/**", "favicon.ico", "/static/**/**", "database_init/**");
+        web.ignoring().antMatchers(/*"/login",*/ "index.html","/static/**/**", "favicon.ico", "/static/**/**", "database_init/**");
     }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        //super.configure(http);(此处不需要对父类进行引用)
-        //配置不需要登录验证
-        http.authorizeRequests().anyRequest().permitAll().and().logout().permitAll();
-    }
+//
+//    @Override
+//    protected void configure(HttpSecurity http) throws Exception {
+//        //super.configure(http);(此处不需要对父类进行引用)
+//        //配置不需要登录验证
+////        http.authorizeRequests().anyRequest().permitAll().and().logout().permitAll();
+//    }
 
 }
