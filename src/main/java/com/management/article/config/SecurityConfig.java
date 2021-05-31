@@ -10,7 +10,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(WebSecurity web) throws Exception {
         this.getHttp().csrf().disable();
-        web.ignoring().antMatchers("/login", "index.html", "favicon.ico", "/static/css", "/static/js", "/static/fonts", "/database_init/**");
+        web.ignoring().antMatchers("/login", "index.html","/static/**/**", "favicon.ico", "/static/**/**", "database_init/**");
     }
 
     @Override

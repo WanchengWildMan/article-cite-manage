@@ -23,6 +23,4 @@ public interface ArticleDAO {
     List<ArticleDO> findById(@Param("id") long id);
 
 
-
-
 }

@@ -24,7 +24,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
-import  com.alibaba.excel.*;
+import com.alibaba.excel.*;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
@@ -33,6 +34,7 @@ import java.sql.ResultSet;
 import java.sql.SQLDataException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collector;
 
 @Controller
 @RequestMapping("/admin")
@@ -118,16 +120,25 @@ public class ArticleControl {
         resultMap.put("status", 200);
         List<String> errors = new ArrayList<>();
         for (ArticleDO articleDO : articleDOList) {
+            boolean ok = false;
             try {
-                if (articleDAO.add(articleDO) > 0)
+                if (articleDAO.add(articleDO) > 0) {
                     successNum++;
+                    ok = true;
+                }
             } catch (Exception e) {
-                errors.add(e.getMessage());
-                resultMap.put("status", 400);
+                if (articleDAO.update(articleDO) > 0) {
+                    successNum++;
+                    ok = true;
+                }
+                if (!ok) {
+                    errors.add(e.getMessage());
+                    resultMap.put("status", 400);
+                }
             }
         }
         resultMap.put("errors", errors);
-        if (successNum > 0)
+        if (articleDOList.size() - successNum > 0)
             resultMap.put("status", 401);
         resultMap.put("totalNum", articleDOList.size());
         resultMap.put("successNum", successNum);
@@ -144,7 +155,6 @@ public class ArticleControl {
         Map logMap = new HashMap();
         logMap.put("body", articleDO);
         LOG.info(articleDO.getArticleName());
-        System.out.println(articleDO.getPublishYear());
         List<String> errors = new ArrayList<>();
 
         int successNum = 0;
@@ -243,14 +253,14 @@ public class ArticleControl {
             return resultMap;
         }
         InputStream in = null;
-
+        List articleDOList = null;
         try {
             in = multipartFile.getInputStream();
+            XSSFWorkbook excel = new XSSFWorkbook(in);
+            articleDOList = ArticleUtil.parseArticlesFromExcel(excel);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        XSSFWorkbook excel = new XSSFWorkbook(in);
-        List articleDOList = ArticleUtil.parseArticlesFromExcel(excel);
         resultMap = this.addMul(articleDOList);
         for (int i = 0; i < articleDOList.size(); i++)
             LOG.debug(articleDOList.get(i));
@@ -283,8 +293,10 @@ public class ArticleControl {
     }
 
     @PostMapping(value = "/downloadExcel")//, produces = "application/vnd.ms-excel;charset=utf-8")
-    public ResponseEntity<byte[]> downloadExcel(@RequestBody List<ArticleDO> articleDOList,HttpServletResponse response)throws IOException {
+    public ResponseEntity<byte[]> downloadExcel(@RequestParam("isTemplate") boolean isTemplate, @RequestBody List<ArticleDO> articleDOList, HttpServletResponse response) throws IOException {
         //文档对象
+
+
         Map resultMap = new HashMap();
         for (ArticleDO articleDO : articleDOList)
             System.out.println(articleDO.getArticleName());
@@ -292,40 +304,37 @@ public class ArticleControl {
         resultMap.put("status", 200);
         XSSFWorkbook wb = new XSSFWorkbook();
         int rowNum = 0;
-        Sheet sheet = wb.createSheet("excel的标题");
+        Sheet sheet = wb.createSheet("文献导出列表");
+        String[] headerNames = {"文献编号", "作者", "文献题目", "文献类型", "出版机构", "出版年份", "卷号（期号）", "起始页码或出版月", "结束页码或出版日"};
         Row row0 = sheet.createRow(rowNum++);
-        row0.createCell(0).setCellValue("文献编号");
-        row0.createCell(1).setCellValue("引用次序");
-        row0.createCell(2).setCellValue("作者");
-        row0.createCell(3).setCellValue("文献题目");
-        row0.createCell(4).setCellValue("文献类型");
-        row0.createCell(5).setCellValue("出版机构");
-        row0.createCell(6).setCellValue("出版年份");
-        row0.createCell(7).setCellValue("卷号（期号）");
-        row0.createCell(8).setCellValue("起始页码或出版月");
-        row0.createCell(9).setCellValue("结束页码或出版日");
-        if (articleDOList != null && articleDOList.size() > 0) {
-            for (ArticleDO articleDO : articleDOList) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(articleDO.getId());
-                row.createCell(1).setCellValue("[" + articleDO.getSeqId() + "]");
-                row.createCell(2).setCellValue(articleDO.getAuthor());
-                row.createCell(3).setCellValue(articleDO.getArticleName());
-                row.createCell(4).setCellValue("[" + articleDO.getArticleType() + "]");
-                row.createCell(5).setCellValue(articleDO.getPublishHouse());
-                row.createCell(5).setCellValue(articleDO.getPublishYear());
-                row.createCell(6).setCellValue(articleDO.getPublishYear());
-                row.createCell(7).setCellValue(articleDO.getNum());
-                row.createCell(8).setCellValue(articleDO.getStartPage());
-                row.createCell(9).setCellValue(articleDO.getEndPage());
-            }
+        for (int i = 0; i < headerNames.length; i++) {
+            int idx = (isTemplate ? i - 1 : i);
+            if(idx<0)continue;
+            row0.createCell(idx).setCellValue(headerNames[i]);
         }
-        if (rowNum - 1 == 0) resultMap.put("status", 400);
+        if (!isTemplate) {
+            if (articleDOList != null && articleDOList.size() > 0) {
+                for (ArticleDO articleDO : articleDOList) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(articleDO.getId());
+//                row.createCell(1).setCellValue("[" + articleDO.getSeqId() + "]");
+                    row.createCell(1).setCellValue(articleDO.getAuthor());
+                    row.createCell(2).setCellValue(articleDO.getArticleName());
+                    row.createCell(3).setCellValue("[" + articleDO.getArticleType() + "]");
+                    row.createCell(4).setCellValue(articleDO.getPublishHouse());
+                    row.createCell(5).setCellValue(articleDO.getPublishYear());
+                    row.createCell(6).setCellValue(articleDO.getNum());
+                    row.createCell(7).setCellValue(articleDO.getStartPage());
+                    row.createCell(8).setCellValue(articleDO.getEndPage());
+                }
+            }
+            if (rowNum - 1 == 0) resultMap.put("status", 400);
+        }
         resultMap.put("content", wb);
-        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         wb.write(outputStream);
         outputStream.close();
-        String fileName = new String("导出列表.xlsx".getBytes("UTF-8"), "iso-8859-1");
+        String fileName = new String("文献导出列表.xlsx".getBytes("UTF-8"), "iso-8859-1");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentDispositionFormData("attachment", fileName);
         httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);

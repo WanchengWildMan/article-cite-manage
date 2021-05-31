@@ -11,7 +11,7 @@ public class ArticleDO {
      */
     private long id;
     /**
-     * 文中的顺序
+     * 引用次序
      */
     private long seqId;
     /**
@@ -31,7 +31,7 @@ public class ArticleDO {
      */
     private String publishHouse;
     /**
-     * 出版时间
+     * 出版年份
      */
     private String publishYear;
     /**

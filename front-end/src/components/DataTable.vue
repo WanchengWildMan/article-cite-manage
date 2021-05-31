@@ -91,7 +91,7 @@
       >
         导入
       </el-button>
-      <el-button type="success" icon="el-icon-download" @click="downloadExcel">
+      <el-button type="success" icon="el-icon-download" @click="downloadshow=true">
         导出
       </el-button>
     </template>
@@ -111,9 +111,9 @@
         <template slot-scope="scope">
           <span v-if="item.name == 'index'">{{ scope.$index + 1 }}</span>
           <template v-else>
-<!--            不可修改或不在编辑状态展示表格本身-->
+            <!--            不可修改或不在编辑状态展示表格本身-->
             <span v-show="item.unModifiable || !scope.row.show">{{
-                scope.row[item.name]==0?"":scope.row[item.name]
+                scope.row[item.name] == 0 ? "" : scope.row[item.name]
               }}</span>
             <el-form :rules="formRules">
               <el-form-item v-show="!scope.row.unModifiable && scope.row.show">
@@ -308,9 +308,12 @@
           type="danger"
           icon="el-icon-close"
           @click="uploadShow = false"
-        >关闭</el-button
-        >
+        >关闭</el-button>
       </span>
+    </el-dialog>
+    <el-dialog title="导出Excel模版或数据" :visible.sync="downloadshow">
+            <el-button type="primary" icon="el-icon-download" @click="downloadExcel(true)">导出xlsx模版</el-button>
+            <el-button type="success" icon="el-icon-download" @click="downloadExcel(false)">导出xlsx数据</el-button>
     </el-dialog>
   </view-page>
 </template>
@@ -360,8 +363,8 @@ export default {
         // num: [{required: true, message: "请填写卷号(期号)", trigger: "blur"}],
         publishHouse: [{required: true, message: "请输入出版机构"}],
         articleType: [{required: true, message: "请选择文献类型"}],
-        startPage: [{required: true, message: "请输入起始页码或刊登月份"}],
-        endPage: [{required: true, message: "请输入结束页码或刊登日"}],
+        startPage: [{required: true, message: "请输入起始页码或出版月"}],
+        endPage: [{required: true, message: "请输入结束页码或出版日"}],
         seqId: [{required: true, message: "请输入文献的引用次序"}],
       },
       articleModel: {
@@ -428,7 +431,7 @@ export default {
         },
         {
           name: "publishYear",
-          label: "出版时间",
+          label: "出版年份",
           isYear: true,
         },
         {
@@ -440,13 +443,13 @@ export default {
         },
         {
           name: "startPage",
-          label: "起始页码或刊登月份",
+          label: "起始页码或出版月",
           isNumber: true,
           minNumber: 1,
         },
         {
           name: "endPage",
-          label: "结束页码或刊登日",
+          label: "结束页码或出版日",
           isNumber: true,
           minNumber: 1,
         },
@@ -482,6 +485,7 @@ export default {
       currentPageSize: 3,
       editShow: false,
       uploadShow: false,
+      downloadshow:false,
       currentAddFileList: [],
       currentAuthors: [],
     };
@@ -821,11 +825,11 @@ export default {
       window.location.reload()
     },
     // 下载excel
-    downloadExcel() {
+    downloadExcel(isTemplate = false) {
       let baseURL = "http://localhost:8080"
       let _this = this;
       // console.log(JSON.stringify(this.filtedData))
-      axios.post(`${baseURL}/admin/downloadExcel`, _this.filtedData, {
+      axios.post(`/admin/downloadExcel?isTemplate=${isTemplate}`, _this.filtedData, {
         responseType: "blob"
       })
         .then((res) => {
@@ -837,7 +841,7 @@ export default {
           var downloadElement = document.createElement("a");
           var href = window.URL.createObjectURL(blob); //创建下载的链接
           downloadElement.href = href;
-          downloadElement.download = "导出列表.xlsx"; //下载后文件名
+          downloadElement.download = "文献导出列表.xlsx"; //下载后文件名
           document.body.appendChild(downloadElement);
           downloadElement.click(); //点击下载
           document.body.removeChild(downloadElement); //下载完成移除元素

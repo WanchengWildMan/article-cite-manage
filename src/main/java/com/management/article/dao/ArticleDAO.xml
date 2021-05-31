@@ -76,7 +76,7 @@
         <if test="endPage!=0">end_page=#{endPage} ,
         </if>
         gmt_modified=now()
-        where id=#{id}
+        where id=#{id} or article_name=#{articleName}
     </update>
     <select id="findById" resultType="com.management.article.dataobject.ArticleDO">
         select id as id,seq_id seqId,author as author,article_name as articleName,article_type as

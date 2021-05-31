@@ -70,10 +70,10 @@ public class ArticleUtil {
         ArticleDO articleDO = new ArticleDO();
         List<Map> props = ClassFieldUtil.getFieldsInfo(new ArticleDO());
         Map map = new HashMap<>();
-        boolean ok=mat.find();
+        boolean ok = mat.find();
         if (!ok) {
             mat = matcher_eng;
-            ok=matcher_eng.find();
+            ok = matcher_eng.find();
         }
         if (ok) {
             //不同类型要分别判断！！
@@ -82,8 +82,9 @@ public class ArticleUtil {
                 String propType = props.get(i).get("type").toString().toLowerCase();
                 String content = mat.group(i);
                 System.out.println(content);
-                if (content == "") content = "0";
-                if (propType.contains("short")) {
+                //
+                if (content == "") content = "无";
+                else if (propType.contains("short")) {
                     int x = 0;
                     x = Integer.parseInt(content);
                     map.put(propName, (short) x);
@@ -113,20 +114,22 @@ public class ArticleUtil {
             return null;
         List<Map> props = ClassFieldUtil.getFieldsInfo(new ArticleDO());
         List<ArticleDO> articleDOList = new ArrayList();
+        //跳过表头
         for (int rowNum = 1, i = 0; rowNum <= xssfSheet.getLastRowNum(); rowNum++, i++) {
             XSSFRow xssfRow = xssfSheet.getRow(rowNum);
             int minColIx = xssfRow.getFirstCellNum();
             int maxColIx = xssfRow.getLastCellNum();
+            if (xssfRow.getCell(minColIx).toString() == "" || xssfRow.getCell(minColIx + 1).toString() == "") break;
             Map rowMap = new HashMap();
             for (int colIx = minColIx; colIx < maxColIx; colIx++) {
                 int j = (colIx - minColIx);
                 XSSFCell cell = xssfRow.getCell(colIx);
-                if (cell == null) {
+                if (cell.toString() == "") {
                     continue;
                 }
-                System.out.println(cell.getCellType());
-                String propName = props.get(j + 1).get("name").toString();
-                String propType = props.get(j + 1).get("type").toString();
+//                System.out.println(cell.getCellType());
+                String propName = props.get(j + 2).get("name").toString();
+                String propType = props.get(j + 2).get("type").toString();
                 if (cell.getCellType() == CellType.NUMERIC) {
                     double x = cell.getNumericCellValue();
                     if (propName.equals("publishYear")) {
