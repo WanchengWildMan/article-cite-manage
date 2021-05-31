@@ -25,9 +25,9 @@ CREATE DATABASE IF NOT EXISTS `article_manage`;
 CREATE TABLE IF NOT EXISTS `article` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `seq_id` bigint NOT NULL,
-  `author` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `article_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `article_type` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `author` varchar(80) CHARACTER SET utf8  NOT NULL,
+  `article_name` varchar(100) CHARACTER SET utf8  NOT NULL,
+  `article_type` varchar(5) CHARACTER SET utf8  NOT NULL,
   `publish_house` varchar(50) DEFAULT NULL,
   `publish_year` char(4) NOT NULL,
   `num` smallint NOT NULL,
