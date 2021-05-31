@@ -37,7 +37,8 @@ CREATE TABLE `article` (
   `gmt_modified` datetime NOT NULL,
   PRIMARY KEY (`id`,`article_name`) USING BTREE,
   UNIQUE KEY `unique_article_name` (`article_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=435678882 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=435678882 DEFAULT CHARSET=utf8;
+
 
 -- ----------------------------
 -- Records of article
