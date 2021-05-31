@@ -20,6 +20,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 -- Table structure for article
 -- ----------------------------
+CREATE DATABASE IF NOT EXISTS `article_manage`;
 DROP TABLE IF EXISTS `article`;
 CREATE TABLE `article` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,

@@ -21,6 +21,7 @@ USE article_manage;
 -- ----------------------------
 -- Table structure for article
 -- ----------------------------
+CREATE DATABASE IF NOT EXISTS `article_manage`;
 CREATE TABLE IF NOT EXISTS `article` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `seq_id` bigint NOT NULL,
