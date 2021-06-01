@@ -1,19 +1,13 @@
 package com.management.article.control;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.management.article.dao.ArticleDAO;
 import com.management.article.dataobject.ArticleDO;
-import com.management.article.utils.ArticleDOFactory;
 import com.management.article.utils.ArticleUtil;
-import com.management.article.utils.ClassFieldUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.*;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -22,19 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
-import com.alibaba.excel.*;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.net.http.HttpResponse;
-import java.sql.ResultSet;
-import java.sql.SQLDataException;
-import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collector;
 
 @Controller
 @RequestMapping("/admin")
@@ -103,8 +88,18 @@ public class ArticleControl {
             successNum = articleDAO.add(articleDO);
 
         } catch (Exception e) {
-            errors.add(e.getMessage());
-            resultMap.put("status", 400);
+            boolean ok = false;
+            //如果重复则更新
+            if (e.getMessage().contains("Duplicate")) {
+                if (articleDAO.update(articleDO) > 0) {
+                    successNum++;
+                    ok = true;
+                }
+                if (!ok) {
+                    errors.add(articleDO.getAuthor() + articleDO.getArticleName() + "已存在！");
+                    resultMap.put("status", 400);
+                }
+            }
         }
         resultMap.put("errors", errors);
         resultMap.put("successNum", successNum);
@@ -119,7 +114,8 @@ public class ArticleControl {
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
         resultMap.put("status", 200);
         List<String> errors = new ArrayList<>();
-        for (ArticleDO articleDO : articleDOList) {
+        for (int i = 0; i < articleDOList.size(); i++) {
+            ArticleDO articleDO = articleDOList.get(i);
             boolean ok = false;
             try {
                 if (articleDAO.add(articleDO) > 0) {
@@ -132,9 +128,13 @@ public class ArticleControl {
                     ok = true;
                 }
                 if (!ok) {
-                    errors.add(e.getMessage());
+                    //导入列表中空值即为解析失败的条目
+                    if (e.getMessage().contains("Duplicate"))
+                        errors.add(articleDO.getAuthor() + articleDO.getArticleName() + "已存在！");
+                    else if (articleDO == null) errors.add("第" + (i + 1) + "条保存失败！" + "格式不正确或不支持该种格式！");
                     resultMap.put("status", 400);
                 }
+
             }
         }
         resultMap.put("errors", errors);
@@ -273,7 +273,7 @@ public class ArticleControl {
         Map resultMap = new HashMap();
         resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
         resultMap.put("status", 200);
-
+        resultMap.put("successNum", 0);
         List<String> errors = new ArrayList<>();
         try {
             InputStream is = file.getInputStream();
@@ -282,11 +282,18 @@ public class ArticleControl {
             BufferedReader br = new BufferedReader(
                     new InputStreamReader(is, "UTF-8"));
             while ((line = br.readLine()) != null) {
-                articleDOList.add(ArticleUtil.parseArticleFromString(line));
+                try {
+                    ArticleDO articleDO = ArticleUtil.parseArticleFromString(line);
+                    articleDOList.add(articleDO);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+            //防止addMul出错不能返回数量
+            resultMap.put("totalNum", articleDOList.size());
             resultMap = this.addMul(articleDOList);
         } catch (Exception e) {
-            errors.add(e.getMessage());
+            e.printStackTrace();
             resultMap.put("status", 400);
         }
         return resultMap;
@@ -309,7 +316,7 @@ public class ArticleControl {
         Row row0 = sheet.createRow(rowNum++);
         for (int i = 0; i < headerNames.length; i++) {
             int idx = (isTemplate ? i - 1 : i);
-            if(idx<0)continue;
+            if (idx < 0) continue;
             row0.createCell(idx).setCellValue(headerNames[i]);
         }
         if (!isTemplate) {
@@ -332,13 +339,56 @@ public class ArticleControl {
         }
         resultMap.put("content", wb);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        wb.write(outputStream);
-        outputStream.close();
-        String fileName = new String("文献导出列表.xlsx".getBytes("UTF-8"), "iso-8859-1");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentDispositionFormData("attachment", fileName);
-        httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        ResponseEntity<byte[]> filebyte = new ResponseEntity<byte[]>(outputStream.toByteArray(), httpHeaders, HttpStatus.CREATED);
+        ResponseEntity<byte[]> filebyte = null;
+        try {
+            wb.write(outputStream);
+            outputStream.close();
+            String fileName = new String("文献导出列表.xlsx".getBytes("UTF-8"), "iso-8859-1");
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setContentDispositionFormData("attachment", fileName);
+            httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            filebyte = new ResponseEntity<byte[]>(outputStream.toByteArray(), httpHeaders, HttpStatus.CREATED);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return filebyte;
+    }
+
+    @PostMapping(value = "/downloadTxt")//, produces = "application/vnd.ms-excel;charset=utf-8")
+    public ResponseEntity<byte[]> downloadExcel(@RequestBody List<String> lineList, HttpServletResponse response) throws IOException {
+        Map resultMap = new HashMap();
+        for (String articleDOString : lineList)
+            System.out.println(articleDOString);
+        resultMap.put("timestamp", ArticleUtil.LOG_TIME_FORMAT.format(new Date()));
+        resultMap.put("status", 200);
+        // 导出文件
+        String fileName = "文献导出列表";
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        StringBuffer stringBuffer = new StringBuffer();
+        ResponseEntity<byte[]> filebyte = null;
+        String enter = "\n";
+        try {
+            // 把内容写入文件
+            if (lineList.size() > 0) {
+                for (int i = 0; i < lineList.size(); i++) {
+                    stringBuffer.append(lineList.get(i));
+                    stringBuffer.append(enter);
+                }
+            }
+            outputStream.write(stringBuffer.toString().getBytes("UTF-8"));
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setContentDispositionFormData("attachment", fileName);
+            httpHeaders.setContentType(MediaType.TEXT_PLAIN);
+            filebyte = new ResponseEntity<byte[]>(outputStream.toByteArray(), httpHeaders, HttpStatus.CREATED);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return filebyte;
     }
 }

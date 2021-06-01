@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS `article`;
 CREATE TABLE `article`
 (
     `id`            bigint(20) unsigned             NOT NULL AUTO_INCREMENT,
-    `seq_id`        bigint(20)                      NOT NULL,
+    `seq_id`        bigint(20)                      DEFAULT NULL,
     `author`        varchar(80) CHARACTER SET utf8  NOT NULL,
     `article_name`  varchar(100) CHARACTER SET utf8 NOT NULL,
     `article_type`  varchar(5) CHARACTER SET utf8   NOT NULL,

@@ -3,8 +3,8 @@ template {
 }
 
 .el-table .cell {
-  overflow: scroll;
-  text-overflow: unset;
+  /*overflow: scroll;*/
+  /*text-overflow: unset;*/
 }
 /deep/ .el-main .el-container .el-header{
  }

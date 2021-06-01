@@ -115,7 +115,7 @@
             <span v-show="item.unModifiable || !scope.row.show">{{
                 scope.row[item.name] == 0 ? "" : scope.row[item.name]
               }}</span>
-            <el-form :rules="formRules">
+            <el-form :rules="formRules" style="overflow: scroll">
               <el-form-item v-show="!scope.row.unModifiable && scope.row.show">
                 <!-- 判断是展示列表还是新增
             判断编辑状态下是input还是select -->
@@ -245,7 +245,6 @@
               :label="childItem.label"
               :value="childItem.value"
             >
-              <!-- FIXME: 不明原因childItem undefined -->
               <!--                  TODO 初始化时js加初选-->
             </el-option>
           </el-select>
@@ -282,14 +281,15 @@
         :action="uploadExcelURL()"
         list-type="text"
         :on-success="uploadSuccess"
+        :on-error="uploadError"
         :file-list="currentAddFileList"
       >
-        <el-button type="primary" icon="el-icon-upload" @click="uploadExcelNow"
+        <el-button type="primary" icon="el-icon-upload"
         >立即上传
         </el-button>
       </el-upload>
-      <h4>从txt文本中导入</h4>
 
+      <h4>从txt文本中导入</h4>
       <el-upload
         title="txt文本"
         ref="uploadtxt"
@@ -297,9 +297,10 @@
         :action="uploadTxtURL()"
         list-type="text"
         :on-success="uploadSuccess"
+        :on-error="uploadError"
         :file-list="currentAddFileList"
       >
-        <el-button type="primary" icon="el-icon-upload" @click="uploadTxtNow"
+        <el-button type="primary" icon="el-icon-upload"
         >立即上传
         </el-button>
       </el-upload>
@@ -311,9 +312,10 @@
         >关闭</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="导出Excel模版或数据" :visible.sync="downloadshow">
-            <el-button type="primary" icon="el-icon-download" @click="downloadExcel(true)">导出xlsx模版</el-button>
-            <el-button type="success" icon="el-icon-download" @click="downloadExcel(false)">导出xlsx数据</el-button>
+    <el-dialog title="导出模版或数据" :visible.sync="downloadshow">
+      <el-button type="primary" icon="el-icon-download" @click="downloadExcel(true)">导出xlsx模版</el-button>
+      <el-button type="success" icon="el-icon-download" @click="downloadExcel(false)">导出xlsx数据</el-button>
+      <el-button type="success" icon="el-icon-download" @click="downloadTxt()">导出txt数据</el-button>
     </el-dialog>
   </view-page>
 </template>
@@ -350,22 +352,15 @@ export default {
       formRules: {
         //要在el-form里面加
         articleName: [
-          {required: true, message: "请填写文献题目", trigger: "blur"},
+          {required: true, message: "请填写文献题目"},
         ],
-        author: [{required: false, message: "请输入作者", trigger: "blur"}],
-        publishYear: [
-          {
-            required: true,
-            message: "请选择日期",
-            trigger: "change",
-          }
-        ],
+        author: [{required: true, message: "请输入作者", trigger: "blur"}],
+        publishYear: [{required: true, message: "请选择日期", trigger: "change",}],
         // num: [{required: true, message: "请填写卷号(期号)", trigger: "blur"}],
         publishHouse: [{required: true, message: "请输入出版机构"}],
         articleType: [{required: true, message: "请选择文献类型"}],
         startPage: [{required: true, message: "请输入起始页码或出版月"}],
         endPage: [{required: true, message: "请输入结束页码或出版日"}],
-        seqId: [{required: true, message: "请输入文献的引用次序"}],
       },
       articleModel: {
         id: "",
@@ -485,7 +480,7 @@ export default {
       currentPageSize: 3,
       editShow: false,
       uploadShow: false,
-      downloadshow:false,
+      downloadshow: false,
       currentAddFileList: [],
       currentAuthors: [],
     };
@@ -588,7 +583,7 @@ export default {
       this.$set(row, "show", false);
       console.log(row);
       axios
-        .post(`http://localhost:${this.port}/admin/updateOne`, row)
+        .post(`/admin/updateOne`, row)
         .then(function (resp) {
           let ok = !_this.hasError(resp);
           _this.$message({
@@ -628,32 +623,36 @@ export default {
       } else {
         this.currentAuthors.push(this.inputAuthor);
         this.inputAuthor = "";
+        this.formRules.author[0].required = false;
       }
     },
     removeCurrentAuthor(tag) {
       this.currentAuthors.splice(this.currentAuthors.indexOf(tag), 1);
     },
+    //对话框添加
     saveNewRecord() {
       const _this = this;
 
       this.$refs.articleAddForm.validate((valid) => {
         if (valid) {
           this.articleModel.author = this.currentAuthors.join(",");
-          //   this.$alert(this.$refs.articleAddForm.author);
           axios
             .post(
-              `http://localhost:${this.port}/admin/addOne`,
+              `/admin/addOne`,
               this.articleModel
             )
             .then(function (resp) {
-              let ok = !_this.hasError(resp);
+              let ok = !_this.hasError(resp) && resp.data.errors.indexOf("Duplicate") == -1;
               _this.$message({
                 type: ok ? "success" : "error",
-                message: "添加" + (ok ? "成功" : "失败"),
+                message: "添加" + (ok ? "成功" : `失败}`),
               });
+              _this.refresh();
             });
+
         }
       });
+
     },
     // ,
     // closeEditDialog() {
@@ -710,10 +709,10 @@ export default {
     getTableData(url = null) {
       const _this = this;
       console.log(url)
-      if (!url) url = `http://localhost:${this.port}/admin/find`;
+      if (!url) url = `/admin/find`;
       return axios.get(url).then(function (resp) {
-        console.log(resp);
-        console.log(resp.data.content.length);
+        // console.log(resp);
+        // console.log(resp.data.content.length);
         _this.tableDataAll = resp.data.content;
         console.log(_this.tableDataAll);
       });
@@ -826,7 +825,6 @@ export default {
     },
     // 下载excel
     downloadExcel(isTemplate = false) {
-      let baseURL = "http://localhost:8080"
       let _this = this;
       // console.log(JSON.stringify(this.filtedData))
       axios.post(`/admin/downloadExcel?isTemplate=${isTemplate}`, _this.filtedData, {
@@ -837,7 +835,7 @@ export default {
             type:
               "application/vnd.ms-excel",
           });
-          console.log(res.data)
+          // console.log(res.data)
           var downloadElement = document.createElement("a");
           var href = window.URL.createObjectURL(blob); //创建下载的链接
           downloadElement.href = href;
@@ -850,23 +848,58 @@ export default {
         .catch((err) =>
           this.$notify({
             type: "error",
-            message: err,
+            message: "导出失败，网络错误！",
           })
         );
     },
-// 上传
+    // 上传
     uploadExcelURL() {
-      // console.log(this.$ajax.defaults.baseURL)
-      let baseURL = "http://localhost:8080";
-      return `${baseURL}/admin/uploadExcel`;
+      return `/admin/uploadExcel`;
     }
     ,
+    downloadTxt() {
+      let _this = this;
+      let lineList = [];
+      for (let i in _this.filtedData) {
+        const line = _this.filtedData[i];
+        let lineStr = `[${i}]`;
+        for (let key of Object.keys(line)) {
+          let val = line[key];
+          if (val == "" || val == 0 || val == "0" || key == "id" || key == "seqId" || key.substr(0, 3) == "gmt" || key == "show") continue;
+          if (key == "articleType") lineStr += `[${val}].`;
+          else if (key == "num") lineStr += `(${val}):`;
+          else if (key == "startPage" || (line["articleType"] == "N" && key == "publishYear")) lineStr += `${val}-`
+          else lineStr += `${val}` + `${key == "articleName" ? "" : "."}`;
+        }
+        lineList.push(lineStr);
+      }
+      axios.post(`/admin/downloadTxt`, lineList, {
+        responseType: "blob"
+      }).then((res) => {
+        var blob = new Blob([res.data],);
+        // console.log(res.data)
+        var downloadElement = document.createElement("a");
+        var href = window.URL.createObjectURL(blob); //创建下载的链接
+        downloadElement.href = href;
+        downloadElement.download = "文献导出列表.txt"; //下载后文件名
+        document.body.appendChild(downloadElement);
+        downloadElement.click(); //点击下载
+        document.body.removeChild(downloadElement); //下载完成移除元素
+        window.URL.revokeObjectURL(href); //释放掉blob对象
+      })
+        .catch((err) =>
+          this.$notify({
+            type: "error",
+            message: "导出失败，网络错误！",
+          })
+        );
+    },
     uploadTxtURL() {
-      let baseURL = "http://localhost:8080";
-      return `${baseURL}/admin/uploadTxt`;
+      return `/admin/uploadTxt`;
     }
     ,
     uploadExcelNow() {
+      console.log("uploadExcel!!!!!")
       this.$refs.uploadexcel.submit();
     }
     ,
@@ -876,30 +909,40 @@ export default {
     ,
     uploadSuccess(res) {
       if (res.status != 200) {
+        console.log(res.successNum)
         this.$notify.error({
           title: `${res.successNum}个导入成功，${
             res.totalNum - res.successNum
           }个导入失败，引用格式不正确或引用条目已存在！`,
+          message: `${res.errors.join("\n")}`
         });
       } else
         this.$notify.success({
           title: `${res.successNum}个导入成功！`,
         });
-      // this.refresh();
       this.uploadShow = false;
     }
     ,
+    //上传失败时提示
+    uploadError(error) {
+      this.$message({
+        message: "上传失败，请检查网络状态！",
+        type: 'error',
+        showClose: true
+      });
+    },
     searchArticle() {
-      let baseURL = "http://localhost:8080";
+      let baseURL = `http://localhost:${this.port}`;
       let _this = this;
       this.getTableData(
-        `${baseURL}/admin/find?id=${!this.filterId ? 0 : this.filterId}&author=${this.filterAuthor}&articleType=${this.articleType}&articleName=${this.filterName}&publishYear=${this.filterYear_start.getFullYear()}`
+        `/admin/find?id=${!this.filterId ? 0 : this.filterId}&author=${this.filterAuthor}&articleType=${this.articleType}&articleName=${this.filterName}&publishYear=${this.filterYear_start.getFullYear()}`
       );
     }
     , change(e) {
       this.$forceUpdate()
     },
-  },
+  }
+  ,
 
   computed: {
     filtedData() {

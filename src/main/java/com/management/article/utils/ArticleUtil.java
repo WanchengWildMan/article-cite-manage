@@ -71,13 +71,14 @@ public class ArticleUtil {
         List<Map> props = ClassFieldUtil.getFieldsInfo(new ArticleDO());
         Map map = new HashMap<>();
         boolean ok = mat.find();
+        int AUTHOR_GROUP_INDEX = 2, JOURNAL_NUMBER_OR_PAPER_NUMBER_INDEX = 7;
         if (!ok) {
             mat = matcher_eng;
             ok = matcher_eng.find();
         }
         if (ok) {
             //不同类型要分别判断！！
-            for (int i = 1; i <= mat.groupCount(); i++) {
+            for (int i = AUTHOR_GROUP_INDEX; i <= mat.groupCount(); i++) {
                 String propName = props.get(i).get("name").toString();
                 String propType = props.get(i).get("type").toString().toLowerCase();
                 String content = mat.group(i);
@@ -95,11 +96,15 @@ public class ArticleUtil {
                 }
 
             }
-            if (map.get(END_PAGE).equals(0)) {
+            if (map.get(END_PAGE) == null || map.get(END_PAGE).equals(0)) {
                 map.put(END_PAGE, map.get(START_PAGE));
             }
-            if (map.get(JOURNAL_NUMBER_OR_PAPER_NUMBER).equals(0)) {
-                map.put(JOURNAL_NUMBER_OR_PAPER_NUMBER, 0);
+            if (map.get(JOURNAL_NUMBER_OR_PAPER_NUMBER) == null || map.get(JOURNAL_NUMBER_OR_PAPER_NUMBER).equals(0)) {
+                if (map.get(ARTICLE_TYPE).equals(NEWSPAPER_ARTICLE)) {
+                    int num = Integer.parseInt(s.substring(s.length() - 4, s.length() - 2));
+                    map.put(JOURNAL_NUMBER_OR_PAPER_NUMBER, num);
+                } else
+                    map.put(JOURNAL_NUMBER_OR_PAPER_NUMBER, 0);
             }
             return ArticleDOFactory.getArticleDO(map);
 
