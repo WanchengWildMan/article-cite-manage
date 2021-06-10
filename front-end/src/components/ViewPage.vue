@@ -1,6 +1,6 @@
 <template>
   <el-container>
-    <el-header>
+    <el-header style="height: auto;display: flex">
       <el-row>
         <!-- 左按钮区 -->
         <el-col :span="2">

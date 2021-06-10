@@ -12,10 +12,13 @@ div.el-col.el-col-12 {
   overflow: hidden;
 
 }
+/deep/ .el-head{
+  height:auto;
+}
 
 .el-table,
 .el-table--border {
-  border: 3px solid grey;
+  /*border: 3px solid grey;*/
   border-radius: 20px;
 }
 

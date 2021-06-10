@@ -20,13 +20,13 @@
       ></el-input>
     </template>
     <!-- 过滤条件区 -->
-    <template slot="filter-field" style="display: flex;">
+    <template slot="filter-field" style="display: flex">
       <el-input-number
         v-model="filterId"
         :min="0"
         :step="1"
         placeholder="文献编号"
-        style="min-width: 50px;max-width: 150px;"
+        style="min-width: 50px; max-width: 150px"
       ></el-input-number>
       <!--      文献题目过滤框-->
       <el-input
@@ -34,13 +34,14 @@
         v-model="filterName"
         suffix-icon="el-icon-search"
         placeholder="搜索文献题目"
-        style="min-width: 50px;max-width: 150px;"
+        style="min-width: 50px; max-width: 150px"
         @input="change($event)"
       ></el-input>
       <!-- 文献类型过滤框 -->
-      <el-select v-model="filterType"
-                 placeholder="选择类型"
-                 style="min-width: 50px;max-width: 150px;"
+      <el-select
+        v-model="filterType"
+        placeholder="选择类型"
+        style="min-width: 50px; max-width: 150px"
       >
         <el-option label="全部" value=""></el-option>
         <el-option
@@ -55,7 +56,7 @@
         v-model="filterAuthor"
         suffix-icon="el-icon-search"
         placeholder="文献作者"
-        style="min-width: 50px;max-width: 150px;"
+        style="min-width: 50px; max-width: 150px"
       ></el-input>
       <!-- 出版时间过滤框 -->
       <el-date-picker
@@ -63,15 +64,14 @@
         type="year"
         format="yyyy"
         placeholder="起始年份"
-        style="min-width: 50px;max-width: 150px;"
+        style="min-width: 50px; max-width: 150px"
       ></el-date-picker>
 
       <el-date-picker
         v-model="filterYear_end"
         type="year"
         placeholder="结束年份"
-        style="min-width: 50px;max-width: 150px;"
-
+        style="min-width: 50px; max-width: 150px"
       ></el-date-picker>
       <el-button
         type="primary"
@@ -91,13 +91,26 @@
       >
         导入
       </el-button>
-      <el-button type="success" icon="el-icon-download" @click="downloadshow=true">
+      <el-button
+        type="success"
+        icon="el-icon-download"
+        @click="downloadshow = true"
+      >
         导出
       </el-button>
     </template>
     <!-- 表格区 -->
-    <el-table :data="filtedData.slice((currentPage - 1) * pageEachSize, currentPage * pageEachSize)"
-              border id="articleTable" ref="articleTable">
+    <el-table
+      :data="
+        filtedData.slice(
+          (currentPage - 1) * pageEachSize,
+          currentPage * pageEachSize
+        )
+      "
+      border
+      id="articleTable"
+      ref="articleTable"
+    >
       <el-table-column
         v-for="item of tableHeadData"
         :key="item.key"
@@ -157,7 +170,12 @@
         </template>
       </el-table-column>
 
-      <el-table-column sortable="right" label="操作" min-width="300px">
+      <el-table-column
+        sortable="right"
+        label="操作"
+        min-width="300px"
+        style="height: auto"
+      >
         <template slot-scope="scope">
           <el-button
             @click="updateData(scope.row)"
@@ -187,12 +205,11 @@
     <el-pagination
       background
       layout="prev, pager, next, sizes, total, jumper"
-      :page-sizes="[5,10,15,20]"
+      :page-sizes="[5, 10, 15, 20]"
       :page-size="pageEachSize"
       :total="total"
       :current-page="currentPage"
       @current-change="page"
-
       @size-change="handleSizeChange"
     >
     </el-pagination>
@@ -284,9 +301,7 @@
         :on-error="uploadError"
         :file-list="currentAddFileList"
       >
-        <el-button type="primary" icon="el-icon-upload"
-        >立即上传
-        </el-button>
+        <el-button type="primary" icon="el-icon-upload">立即上传</el-button>
       </el-upload>
 
       <h4>从txt文本中导入</h4>
@@ -300,22 +315,36 @@
         :on-error="uploadError"
         :file-list="currentAddFileList"
       >
-        <el-button type="primary" icon="el-icon-upload"
-        >立即上传
-        </el-button>
+        <el-button type="primary" icon="el-icon-upload">立即上传</el-button>
       </el-upload>
       <span slot="footer">
         <el-button
           type="danger"
           icon="el-icon-close"
           @click="uploadShow = false"
-        >关闭</el-button>
+        >关闭</el-button
+        >
       </span>
     </el-dialog>
     <el-dialog title="导出模版或数据" :visible.sync="downloadshow">
-      <el-button type="primary" icon="el-icon-download" @click="downloadExcel(true)">导出xlsx模版</el-button>
-      <el-button type="success" icon="el-icon-download" @click="downloadExcel(false)">导出xlsx数据</el-button>
-      <el-button type="success" icon="el-icon-download" @click="downloadTxt()">导出txt数据</el-button>
+      <el-button
+        type="primary"
+        icon="el-icon-download"
+        @click="downloadExcel(true)"
+      >导出xlsx模版
+      </el-button
+      >
+      <el-button
+        type="success"
+        icon="el-icon-download"
+        @click="downloadExcel(false)"
+      >导出xlsx数据
+      </el-button
+      >
+      <el-button type="success" icon="el-icon-download" @click="downloadTxt()"
+      >导出txt数据
+      </el-button
+      >
     </el-dialog>
   </view-page>
 </template>
@@ -351,12 +380,9 @@ export default {
       inputAuthor: "",
       formRules: {
         //要在el-form里面加
-        articleName: [
-          {required: true, message: "请填写文献题目"},
-        ],
+        articleName: [{required: true, message: "请填写文献题目"}],
         author: [{required: true, message: "请输入作者", trigger: "blur"}],
-        publishYear: [{required: true, message: "请选择日期", trigger: "change",}],
-        // num: [{required: true, message: "请填写卷号(期号)", trigger: "blur"}],
+        publishYear: [{required: true, message: "请选择日期"}],
         publishHouse: [{required: true, message: "请输入出版机构"}],
         articleType: [{required: true, message: "请选择文献类型"}],
         startPage: [{required: true, message: "请输入起始页码或出版月"}],
@@ -486,21 +512,21 @@ export default {
     };
   },
   created() {
-    console.log("CREATED")
+    console.log("CREATED");
   },
   mounted() {
-    console.log("MOUNTED")
-    const self = this
+    console.log("MOUNTED");
+    const self = this;
     this.getTableData().then(() => {
       console.log(self.tableHeadData);
-      console.log(self.tableDataAll)
-      console.log(self.filtedData)
+      console.log(self.tableDataAll);
+      console.log(self.filtedData);
       // this.page(1, self.filtedData)
       this.$nextTick(() => {
         // 表格添加列宽变化
         this.tableResizeInit();
       });
-    })
+    });
 
     for (let i in this.tableHeadData) {
       this.tableHeadData[i]["modelName"] =
@@ -559,9 +585,7 @@ export default {
         .then(() => {
           _this.tableDataAll.splice(index, 1);
           axios
-            .delete(
-              `/admin/deleteOneById?id=` + row.id
-            )
+            .delete(`/admin/deleteOneById?id=` + row.id)
             .then(function (resp) {
               // console.log(_this)
               _this.showAlert(_this, resp, row, "删除");
@@ -582,15 +606,13 @@ export default {
       const _this = this;
       this.$set(row, "show", false);
       console.log(row);
-      axios
-        .post(`/admin/updateOne`, row)
-        .then(function (resp) {
-          let ok = !_this.hasError(resp);
-          _this.$message({
-            type: ok ? "success" : "error",
-            message: "保存" + (ok ? "成功" : "失败"),
-          });
+      axios.post(`/admin/updateOne`, row).then(function (resp) {
+        let ok = !_this.hasError(resp);
+        _this.$message({
+          type: ok ? "success" : "error",
+          message: "保存" + (ok ? "成功" : "失败"),
         });
+      });
     },
     handleEdit(row) {
       // console.log(scope.row); scope.row.$set(scope.row,'show',true)
@@ -636,71 +658,25 @@ export default {
       this.$refs.articleAddForm.validate((valid) => {
         if (valid) {
           this.articleModel.author = this.currentAuthors.join(",");
-          axios
-            .post(
-              `/admin/addOne`,
-              this.articleModel
-            )
-            .then(function (resp) {
-              let ok = !_this.hasError(resp) && resp.data.errors.indexOf("Duplicate") == -1;
-              _this.$message({
-                type: ok ? "success" : "error",
-                message: "添加" + (ok ? "成功" : `失败}`),
-              });
-              _this.refresh();
+          axios.post(`/admin/addOne`, this.articleModel).then(function (resp) {
+            let ok =
+              !_this.hasError(resp) &&
+              resp.data.errors.indexOf("Duplicate") == -1;
+            _this.$message({
+              type: ok ? "success" : "error",
+              message: "添加" + (ok ? "成功" : `失败}`),
             });
-
+            _this.refresh();
+          });
         }
       });
-
     },
-    // ,
-    // closeEditDialog() {
-    //   this.newArticleRecord = {};
-    //   this.currentAuthors = [];
-    //   this.inputAuthor = "";
-    //   this.$refs.articleAddForm.resetFields();
-    //   this.editShow = false;
-    // }
     handleSpanClickDebug() {
       console.log(this.formRules);
     },
-    //input框失去焦点事件
-    //     handleInputBlur: function (event) {   //当 input 失去焦点 时,input 切换为 span，并且让下方 表格消失（注意，与点击表格事件的执行顺序）
-    //       var _event = event;
-    //       setTimeout(function () {
-    //         var _inputNode = _event.target;
-    //         if (this.getParentElement(_inputNode, 4) !== 0) {
-    //           var _cellNode = this.getParentElement(_inputNode, 4);
-    //           this.removeClass(_cellNode, 'current-cell');
-    //           this.removeClass(_cellNode, 'current-cell2');
-    //         }
-    //       }, 200);
-    //     },
     page(currentPage) {
       this.currentPage = currentPage;
       //避免再次请求，直接取缓存
-      // this.tableData = this.tableDataAll;
-      // this.tableData = this.filtedData;
-      // if(data==null) data = this.tableDataAll;
-      // this.tableData = data.slice(
-      //   (currentPage - 1) * this.pageEachSize,
-      //   currentPage * this.pageEachSize
-      // );
-      // console.log(this.tableData[1].publishYear);
-      // this.pageNum = Math.ceil(
-      //   data.length / this.pageEachSize
-      // );
-      // console.log(this.pageNum);
-      // console.log(this.tableData)
-      // this.total = data.length;
-      // this.tableData.map((el) => {
-      //   console.log(el)
-      //   el.publishYear.toString()
-      // })
-      // for (let i in this.tableData) {
-      //   this.tableData[i].publishYear = this.tableData[i].publishYear.toString();
-      // }
     },
     handleSizeChange(psize) {
       this.pageEachSize = psize;
@@ -708,7 +684,7 @@ export default {
     //请求数据不分页
     getTableData(url = null) {
       const _this = this;
-      console.log(url)
+      console.log(url);
       if (!url) url = `/admin/find`;
       return axios.get(url).then(function (resp) {
         // console.log(resp);
@@ -821,19 +797,23 @@ export default {
       this.editShow = false;
     },
     refresh() {
-      window.location.reload()
+      window.location.reload();
     },
     // 下载excel
     downloadExcel(isTemplate = false) {
       let _this = this;
       // console.log(JSON.stringify(this.filtedData))
-      axios.post(`/admin/downloadExcel?isTemplate=${isTemplate}`, _this.filtedData, {
-        responseType: "blob"
-      })
+      axios
+        .post(
+          `/admin/downloadExcel?isTemplate=${isTemplate}`,
+          _this.filtedData,
+          {
+            responseType: "blob",
+          }
+        )
         .then((res) => {
           var blob = new Blob([res.data], {
-            type:
-              "application/vnd.ms-excel",
+            type: "application/vnd.ms-excel",
           });
           // console.log(res.data)
           var downloadElement = document.createElement("a");
@@ -855,8 +835,7 @@ export default {
     // 上传
     uploadExcelURL() {
       return `/admin/uploadExcel`;
-    }
-    ,
+    },
     downloadTxt() {
       let _this = this;
       let lineList = [];
@@ -865,28 +844,43 @@ export default {
         let lineStr = `[${i}]`;
         for (let key of Object.keys(line)) {
           let val = line[key];
-          if (val == "" || val == 0 || val == "0" || key == "id" || key == "seqId" || key.substr(0, 3) == "gmt" || key == "show") continue;
+          if (
+            val == "" ||
+            val == 0 ||
+            val == "0" ||
+            key == "id" ||
+            key == "seqId" ||
+            key.substr(0, 3) == "gmt" ||
+            key == "show"
+          )
+            continue;
           if (key == "articleType") lineStr += `[${val}].`;
           else if (key == "num") lineStr += `(${val}):`;
-          else if (key == "startPage" || (line["articleType"] == "N" && key == "publishYear")) lineStr += `${val}-`
+          else if (
+            key == "startPage" ||
+            (line["articleType"] == "N" && key == "publishYear")
+          )
+            lineStr += `${val}-`;
           else lineStr += `${val}` + `${key == "articleName" ? "" : "."}`;
         }
         lineList.push(lineStr);
       }
-      axios.post(`/admin/downloadTxt`, lineList, {
-        responseType: "blob"
-      }).then((res) => {
-        var blob = new Blob([res.data],);
-        // console.log(res.data)
-        var downloadElement = document.createElement("a");
-        var href = window.URL.createObjectURL(blob); //创建下载的链接
-        downloadElement.href = href;
-        downloadElement.download = "文献导出列表.txt"; //下载后文件名
-        document.body.appendChild(downloadElement);
-        downloadElement.click(); //点击下载
-        document.body.removeChild(downloadElement); //下载完成移除元素
-        window.URL.revokeObjectURL(href); //释放掉blob对象
-      })
+      axios
+        .post(`/admin/downloadTxt`, lineList, {
+          responseType: "blob",
+        })
+        .then((res) => {
+          var blob = new Blob([res.data]);
+          // console.log(res.data)
+          var downloadElement = document.createElement("a");
+          var href = window.URL.createObjectURL(blob); //创建下载的链接
+          downloadElement.href = href;
+          downloadElement.download = "文献导出列表.txt"; //下载后文件名
+          document.body.appendChild(downloadElement);
+          downloadElement.click(); //点击下载
+          document.body.removeChild(downloadElement); //下载完成移除元素
+          window.URL.revokeObjectURL(href); //释放掉blob对象
+        })
         .catch((err) =>
           this.$notify({
             type: "error",
@@ -896,70 +890,71 @@ export default {
     },
     uploadTxtURL() {
       return `/admin/uploadTxt`;
-    }
-    ,
+    },
     uploadExcelNow() {
-      console.log("uploadExcel!!!!!")
+      console.log("uploadExcel!!!!!");
       this.$refs.uploadexcel.submit();
-    }
-    ,
+    },
     uploadTxtNow() {
       this.$refs.uploadtxt.submit();
-    }
-    ,
+    },
     uploadSuccess(res) {
       if (res.status != 200) {
-        console.log(res.successNum)
+        console.log(res.successNum);
         this.$notify.error({
           title: `${res.successNum}个导入成功，${
             res.totalNum - res.successNum
           }个导入失败，引用格式不正确或引用条目已存在！`,
-          message: `${res.errors.join("\n")}`
+          message: `${res.errors.join("\n")}`,
         });
       } else
         this.$notify.success({
           title: `${res.successNum}个导入成功！`,
         });
       this.uploadShow = false;
-    }
-    ,
+    },
     //上传失败时提示
     uploadError(error) {
       this.$message({
         message: "上传失败，请检查网络状态！",
-        type: 'error',
-        showClose: true
+        type: "error",
+        showClose: true,
       });
     },
     searchArticle() {
-      let baseURL = `http://localhost:${this.port}`;
       let _this = this;
       this.getTableData(
-        `/admin/find?id=${!this.filterId ? 0 : this.filterId}&author=${this.filterAuthor}&articleType=${this.articleType}&articleName=${this.filterName}&publishYear=${this.filterYear_start.getFullYear()}`
+        `/admin/find?id=${!this.filterId ? 0 : this.filterId}&author=${
+          this.filterAuthor ? this.filterAuthor : ""
+        }&articleType=${this.articleType}&articleName=${
+          this.filterName ? this.filterName : ""
+        }&publishYearStart=${this.filterYear_start ? this.filterYear_start.getFullYear() : ""}
+        &publishYearEnd=${this.filterYear_end ? this.filterYear_end.getFullYear() : ""}
+        `
       );
-    }
-    , change(e) {
-      this.$forceUpdate()
     },
-  }
-  ,
-
+    change(e) {
+      this.$forceUpdate();
+    },
+  },
   computed: {
     filtedData() {
       let ansFilter = this.tableDataAll
         .filter((item) => {
           var reg = new RegExp(this.searchStr, "i");
-          console.log(item)
+          console.log(item);
           return (
             !this.searchStr ||
             reg.test(item.articleName) ||
-            reg.test(item.author) ||//.join(",")) ||
+            reg.test(item.author) || //.join(",")) ||
             // reg.test(item.author.join(" ")) ||
             reg.test(item.articleType)
           );
         })
         .filter((item) => {
-          return this.filterId == 0 || !this.filterId || item.id == this.filterId;
+          return (
+            this.filterId == 0 || !this.filterId || item.id == this.filterId
+          );
         })
         .filter((item) => {
           return this.filterType == "" || item.articleType == this.filterType;
@@ -975,10 +970,12 @@ export default {
           //   this.filterYear_end == new Date(item.publishYear)
           // );
           return (
-            (!this.filterYear_start || this.filterYear_start == 0 ||
+            (!this.filterYear_start ||
+              this.filterYear_start == 0 ||
               this.filterYear_start.getFullYear() <=
               new Date(item.publishYear).getFullYear()) &&
-            (!this.filterYear_end || this.filterYear_end == 0 ||
+            (!this.filterYear_end ||
+              this.filterYear_end == 0 ||
               this.filterYear_end.getFullYear() >=
               new Date(item.publishYear).getFullYear())
           );
@@ -993,8 +990,7 @@ export default {
       // console.log(this.tableDataAll);
       if (this.tableDataAll.length > 0) this.page(1);
       return ansFilter;
-    }
-    ,
+    },
     sortedData() {
       if (
         !this.sortOrder ||
@@ -1029,21 +1025,16 @@ export default {
             });
           }
       }
-    }
-    ,
+    },
     total() {
       return this.filtedData.length;
-    }
-    ,
+    },
     pagedData() {
       return this.sortedData.slice(
         (this.currentPage - 1) * this.currentPageSize,
         this.currentPage * this.currentPageSize
       );
-    }
-    ,
-  }
-  ,
-}
-;
+    },
+  },
+};
 </script>

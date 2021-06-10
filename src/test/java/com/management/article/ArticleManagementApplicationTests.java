@@ -48,7 +48,6 @@ class ArticleManagementApplicationTests {
     @Test
     void addExcel() {
         FileInputStream fileInputStream = null;
-//        String filePath = "/Volumes/杂项/学习/java/课设/article/src/main/resources/testdata.xlsx";
         ClassPathResource classpathResourceXlsx = new ClassPathResource("testdata.xlsx");
         try {
             File testxlsx = classpathResourceXlsx.getFile();

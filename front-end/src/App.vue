@@ -2,7 +2,7 @@
   <el-container>
     <!-- 头部区域 -->
     <el-header class="head" height="100px" align="center">
-      <h2>论 文 引 用 管 理 系 统</h2>
+      <h2>参 考 文 献 管 理 系 统</h2>
     </el-header>
     <!-- 主区域 -->
     <el-main>

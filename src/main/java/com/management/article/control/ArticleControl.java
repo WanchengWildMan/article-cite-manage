@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -31,16 +32,15 @@ public class ArticleControl {
     @RequestMapping("find")
     @ResponseBody
     private Map find(@RequestParam(value = "id", defaultValue = "0") long id,
-                     @RequestParam(value = "seqId", defaultValue = "0") long seqId,
                      @RequestParam(value = "author", defaultValue = "") String author,
                      @RequestParam(value = "articleName", defaultValue = "") String articleName,
                      @RequestParam(value = "articleType", defaultValue = "") String articleType,
-                     @RequestParam(value = "publishYear", defaultValue = "0") String publishYear
-
+                     @RequestParam(value = "publishYear", defaultValue = "0") String publishYear,
+                     @RequestParam(value = "publishYearStart", defaultValue = "0") String publishYearStart,
+                     @RequestParam(value = "publishYearEnd", defaultValue = "9999") String publishYearEnd
     ) {
         ArticleDO articleQueryParam = new ArticleDO();
         articleQueryParam.setId(id);
-        articleQueryParam.setSeqId(seqId);
         articleQueryParam.setArticleName(articleName);
         articleQueryParam.setAuthor(author);
         articleQueryParam.setArticleType(articleType);
@@ -57,10 +57,9 @@ public class ArticleControl {
         List<String> errors = new ArrayList<>();
         try {
             articleDOs = articleDAO.findByObject(articleQueryParam);
-
+            articleDOs = articleDOs.stream().filter(e -> e.getPublishYear().compareTo(publishYearEnd) < 0 && e.getPublishYear().compareTo(publishYearStart) > 0).collect(Collectors.toList());
             for (ArticleDO articleDO : articleDOs) {
                 System.out.println(articleDO.getArticleName());
-
             }
         } catch (Exception e) {
             errors.add(e.getMessage());
